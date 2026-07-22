@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d0c1a" />
+  <title>Finance — Match Point</title>
+  <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg?v=2" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/glass.css?v=18" />
+  <script>document.documentElement.dataset.theme = localStorage.getItem("mp-theme") || "dark"; document.documentElement.classList.add("lt-js");</script>
+  <style>
+    /* keep the three headline stats side by side on phones — less scrolling */
+    .fin-kpis .stat-card { display: flex; flex-direction: column; justify-content: center; gap: 3px; }
+    .fin-kpis .stat-sub { font-size: 11.5px; color: var(--ink-low); font-weight: 600; }
+    .fin-kpis .stat-sub b { color: var(--tx-gold); font-weight: 700; }
+    @media (max-width: 699px) {
+      .lt-grid.cols-3.fin-kpis { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .fin-kpis .stat-card { padding: 12px 10px; }
+      .fin-kpis .stat-value { font-size: 17px; }
+      .fin-kpis .stat-copy { font-size: 10px; }
+      .fin-kpis .stat-sub { font-size: 9.5px; }
+    }
+
+    /* ledger header: title + tabs + filter + action, one row on wide screens */
+    .ledger-head { display: flex; align-items: center; justify-content: space-between;
+      gap: 10px 14px; flex-wrap: wrap; padding: var(--gap-3) var(--gap-3) 12px; }
+    .ledger-head .lh-title { min-width: 0; }
+    .ledger-head .lh-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .ledger-head #recBtn { white-space: nowrap; }
+    @media (max-width: 560px) {
+      .ledger-head .lh-controls { width: 100%; }
+      .ledger-head #ledgerTabs { flex: 1 1 auto; }
+      .ledger-head #recBtn { margin-left: auto; }
+    }
+
+    /* revenue vs expenses chart */
+    .rv-legend { display: flex; gap: var(--gap-3); flex-wrap: wrap; font-size: 12px; color: var(--ink-mid); align-items: center; }
+    .rv-legend .sw { display: inline-block; width: 12px; height: 12px; border-radius: 4px; margin-right: 6px; vertical-align: -2px; }
+    .rv-host { position: relative; width: 100%; }
+    .rv-host svg { width: 100%; height: auto; display: block; overflow: visible; }
+    .rv-bar { cursor: pointer; transform-origin: bottom; animation: lt-grow-bar .7s var(--ease-spring) both; transition: opacity .3s ease, filter .3s ease; }
+    .rv-bar.rev { fill: url(#rvGold); }
+    .rv-bar.exp { fill: rgba(255, 107, 107, 0.75); }
+    :root[data-theme="light"] .rv-bar.exp { fill: rgba(194, 56, 63, 0.7); }
+    .rv-group.dim .rv-bar { opacity: .25; filter: saturate(.4); }
+    .rv-group.focus .rv-bar { filter: brightness(1.12); }
+    .rv-net { fill: none; stroke: var(--optic-400); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round;
+      stroke-dasharray: 600; stroke-dashoffset: 600; animation: rv-draw 1.4s ease-out .5s forwards; }
+    :root[data-theme="light"] .rv-net { stroke: #5158c8; }
+    @keyframes rv-draw { to { stroke-dashoffset: 0; } }
+    .rv-net-dot { fill: var(--optic-400); stroke: rgba(0,0,0,.35); stroke-width: 1.4; opacity: 0; animation: rv-dot-in .3s ease forwards; }
+    :root[data-theme="light"] .rv-net-dot { fill: #5158c8; stroke: #fff; }
+    @keyframes rv-dot-in { to { opacity: 1; } }
+    .rv-xlabel { fill: var(--ink-low); font-size: 11px; font-family: var(--font-body); font-weight: 600; cursor: pointer; }
+    .rv-group.focus + text, text.rv-xlabel.focus { fill: var(--tx-gold); font-weight: 800; }
+    .rv-tip { position: absolute; pointer-events: none; z-index: 4; transform: translate(-50%, -115%); padding: 8px 12px;
+      border-radius: 10px; white-space: nowrap; opacity: 0; background: var(--toast-bg); border: 1px solid var(--toast-border);
+      -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 10px 26px rgba(0,0,0,.3);
+      transition: opacity .18s ease; font-size: 12px; color: var(--ink-hi); }
+    .rv-tip.show { opacity: 1; }
+    .rv-tip b { font-family: var(--font-display); }
+    .rv-hint { font-size: 11.5px; color: var(--ink-faint); text-align: center; margin-top: 4px; }
+
+    /* month drill-down */
+    .rv-detail { display: none; margin-top: var(--gap-3); border-top: 1px solid var(--line); padding-top: var(--gap-3); }
+    .rv-detail.show { display: block; animation: lt-step-in .45s var(--ease-spring) both; }
+    .rv-detail .rd-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+    .rv-detail .rd-head h3 { font-size: 16px; }
+    .rd-rows { display: flex; flex-direction: column; gap: 7px; }
+    .rd-row { display: flex; align-items: center; gap: 12px; font-size: 12.5px; }
+    .rd-row .rd-l { flex: none; width: 142px; color: var(--ink-mid); font-weight: 650; }
+    .rd-row .rd-bar { flex: 1; height: 9px; border-radius: 6px; background: var(--line); overflow: hidden; }
+    :root[data-theme="light"] .rd-row .rd-bar { background: rgba(60, 48, 30, 0.14); }
+    .rd-row .rd-bar i { display: block; height: 100%; border-radius: 6px; transform-origin: left; animation: lt-fill-bar .7s var(--ease-spring) both; }
+    .rd-row.g .rd-bar i { background: var(--gold-grad); }
+    .rd-row.r .rd-bar i { background: rgba(255, 107, 107, 0.8); }
+    :root[data-theme="light"] .rd-row.r .rd-bar i { background: rgba(194, 56, 63, 0.75); }
+    .rd-row .rd-v { flex: none; width: 64px; text-align: right; font-weight: 700; color: var(--ink-hi); font-variant-numeric: tabular-nums; }
+
+    /* revenue streams */
+    .stream-wrap { display: grid; grid-template-columns: 1fr 124px; gap: var(--gap-3); align-items: center; }
+    @media (max-width: 359px) { .stream-wrap { grid-template-columns: 1fr; gap: 4px; } }
+    .stream-bars { display: flex; align-items: flex-end; gap: 8px; height: 116px; }
+    .stream-bars .mo { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; height: 100%; justify-content: flex-end; }
+    .stream-bars .stack { width: 100%; max-width: 40px; display: flex; flex-direction: column-reverse; border-radius: 4px 4px 0 0; overflow: hidden; }
+    .stream-bars .stack i { display: block; transform-origin: bottom; animation: lt-grow-bar .6s var(--ease-spring) both; }
+    .stream-bars .mo-l { font-size: 10.5px; color: var(--ink-low); }
+    .seg-mem { background: var(--gold-grad); }
+    .seg-rally { background: linear-gradient(180deg,#6ee7b7,#34d399); }
+    .seg-urban { background: linear-gradient(180deg,#b9c4ff,#8ea2ff); }
+    .stream-donut { display: flex; flex-direction: column; gap: 8px; align-items: center; justify-content: center; }
+    .stream-donut .d-svg { width: 118px; height: 118px; display: block; }
+    .stream-donut .ds { transition: stroke-width .18s ease, opacity .18s ease; }
+    .stream-donut .ds.can { cursor: pointer; }
+    .stream-donut .ds.can:hover { stroke-width: 21; }
+    .stream-donut .d-ct { fill: var(--ink-low); font-size: 11px; }
+    .stream-donut .d-cb { fill: var(--tx-gold); font-size: 15px; font-weight: 700; font-family: var(--font-display); }
+    .stream-donut .d-hint { fill: var(--ink-faint); font-size: 8.5px; }
+    .stream-bars .mo { border: none; background: none; cursor: pointer; padding: 0; }
+    .stream-bars .mo .stack { transition: filter .2s ease, transform .2s ease; }
+    .stream-bars .mo:hover .stack { filter: brightness(1.12); }
+    .stream-bars .mo.sel .stack { transform: scaleY(1.03); box-shadow: 0 0 0 1.5px rgba(255,156,51,.6); }
+    .stream-bars .mo.sel .mo-l { color: var(--tx-gold); font-weight: 700; }
+    .stream-detail { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+    .stream-detail .sd-h { font-family: var(--font-display); font-weight: 700; font-size: 13.5px; color: var(--ink-hi); margin-bottom: 6px; }
+    .stream-detail .sd-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 6px 8px; font-size: 12.5px; color: var(--ink-mid); border-radius: 8px; }
+    .stream-detail .sd-row .sd-k { display: flex; align-items: center; min-width: 0; }
+    .stream-detail .sd-row .sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 7px; flex: none; }
+    .stream-detail .sd-row .sd-v { font-weight: 700; color: var(--ink-hi); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    /* accordion: expandable nodes + indentation keep the whole tree visible */
+    .stream-detail .sd-row.node { cursor: pointer; transition: background .15s ease; }
+    .stream-detail .sd-row.node:hover { background: rgba(255, 156, 51, .08); }
+    .stream-detail .sd-row.d1 { padding-left: 24px; }
+    .stream-detail .sd-row.d2 { padding-left: 42px; font-size: 12px; color: var(--ink-low); }
+    .stream-detail .sd-chev { display: inline-block; margin-right: 5px; color: var(--tx-gold); font-weight: 700; transition: transform .2s ease; }
+    .stream-detail .sd-row.open > .sd-k > .sd-chev { transform: rotate(90deg); }
+  </style>
+</head>
+<body>
+  <div class="lt-bg" aria-hidden="true"></div>
+
+  <main class="lt-page">
+    <div class="card-head" style="margin-bottom: 0;">
+      <div>
+        <div class="kicker">Finance</div>
+        <h2>Revenue &amp; expenses</h2>
+        <div class="sub" id="monthLine"></div>
+      </div>
+    </div>
+
+    <div class="lt-grid cols-3 fin-kpis">
+      <div class="glass glass-hover stat-card reveal">
+        <span class="stat-copy">Collected · last 30 days</span>
+        <span class="stat-value" id="kpiTotal">—</span>
+        <span class="stat-sub" id="kpiTotalSub"></span>
+      </div>
+      <div class="glass glass-hover stat-card reveal d1">
+        <span class="stat-copy">Court revenue share</span>
+        <span class="stat-value" id="kpiCourt">—</span>
+        <span class="stat-sub" id="kpiCourtSub"></span>
+      </div>
+      <div class="glass glass-hover stat-card reveal d2">
+        <span class="stat-copy" id="kpiNetLabel">Net margin</span>
+        <span class="stat-value" id="kpiNet">—</span>
+        <span class="stat-sub" id="kpiNetSub"></span>
+      </div>
+    </div>
+
+    <!-- revenue vs expenses -->
+    <div class="glass glass-card chart-card reveal">
+      <div class="card-head">
+        <div><div class="kicker">Performance</div><h2>Revenue vs expenses</h2></div>
+        <div class="rv-legend">
+          <span><span class="sw" style="background:var(--gold-grad);"></span>Revenue</span>
+          <span><span class="sw" style="background:rgba(255,107,107,.75);"></span>Expenses</span>
+          <span><span class="sw" style="background:var(--optic-400);border-radius:99px;height:4px;margin-top:4px;"></span>Net profit</span>
+        </div>
+      </div>
+      <div class="rv-host" id="rvHost"></div>
+      <div class="rv-hint" id="rvHint">Tap a month to zoom into its breakdown</div>
+      <div class="rv-detail" id="rvDetail"></div>
+    </div>
+
+    <!-- revenue by stream: memberships vs court hire -->
+    <div class="glass glass-card reveal hide" id="streamCard">
+      <div class="card-head">
+        <div><div class="kicker">Revenue streams</div><h2>Where the money comes from</h2></div>
+        <div class="rv-legend" id="streamLegend"></div>
+      </div>
+      <div class="stream-wrap">
+        <div class="stream-bars" id="streamBars"></div>
+        <div class="stream-donut" id="streamDonut"></div>
+      </div>
+      <div class="stream-detail" id="streamDetail"></div>
+    </div>
+
+    <div class="glass">
+      <div class="ledger-head">
+        <div class="lh-title"><div class="kicker">Ledger</div><h2 style="font-size:18px;" id="ledgerTitle">Recent revenue</h2></div>
+        <div class="lh-controls">
+          <div class="chip-row filters" id="ledgerTabs">
+            <button class="chip active" data-tab="revenue">Revenue</button>
+            <button class="chip" data-tab="expenses">Expenses</button>
+          </div>
+          <span class="lt-filter" id="typeFilterWrap">
+            <select id="typeSelect" aria-label="Filter revenue">
+              <option value="all">All revenue</option>
+              <option value="Membership">Memberships</option>
+              <option value="Court">Court bookings</option>
+            </select>
+          </span>
+          <span class="lt-filter hide" id="catFilterWrap">
+            <select id="catSelect" aria-label="Filter expenses"></select>
+          </span>
+          <button class="btn btn-primary btn-sm" id="recBtn">+ Record payment</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="lt-table tight">
+          <thead id="ledgerHead"></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <div id="ledgerFoot" style="padding: 0 var(--gap-3) var(--gap-3); font-size: 12.5px; color: var(--ink-mid);"></div>
+    </div>
+  </main>
+
+  <!-- add expense modal -->
+  <div class="lt-modal-backdrop" id="expBackdrop">
+    <div class="glass lt-modal">
+      <div class="modal-head">
+        <div><div class="kicker">Add expense</div><h2 style="font-size:20px;">New expense</h2></div>
+        <button class="btn btn-icon btn-ghost" id="expClose">✕</button>
+      </div>
+      <form id="expForm" class="lt-grid" style="gap: var(--gap-3);">
+        <label class="field"><span>Category</span><select name="category" id="expCat"></select></label>
+        <label class="field"><span>Paid to <span class="opt">(payee)</span></span><input type="text" name="payee" placeholder="e.g. TSSPDCL" /></label>
+        <label class="field"><span>Note <span class="opt">(optional)</span></span><input type="text" name="detail" placeholder="e.g. Floodlight power bill" /></label>
+        <label class="field"><span>Amount</span><input type="number" name="amount" id="expAmt" placeholder="0" /></label>
+        <div class="lt-grid cols-2" style="gap: var(--gap-2);">
+          <label class="field"><span>Mode</span><select name="mode"><option>Bank transfer</option><option>UPI</option><option>Cash</option><option>Card</option></select></label>
+          <label class="field"><span>Date</span><input type="date" name="on" id="expDate" /></label>
+        </div>
+        <div class="form-msg" id="expMsg" style="min-height:0;"></div>
+        <button class="btn btn-primary btn-block" type="submit">Save expense</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- record payment modal -->
+  <div class="lt-modal-backdrop" id="payBackdrop">
+    <div class="glass lt-modal">
+      <div class="modal-head">
+        <div><div class="kicker">Record payment</div><h2 style="font-size:20px;">New entry</h2></div>
+        <button class="btn btn-icon btn-ghost" id="payClose">✕</button>
+      </div>
+      <form id="payForm" class="lt-grid" style="gap: var(--gap-3);">
+        <label class="field"><span>Member</span><select name="member" id="paySel"></select></label>
+        <label class="field"><span>Plan</span>
+          <div class="chip-row" id="planChips"></div>
+        </label>
+        <label class="field"><span>Amount</span><input type="number" name="amount" id="payAmt" /></label>
+        <label class="field"><span>Mode</span><select name="mode"><option>UPI</option><option>Cash</option><option>Bank transfer</option></select></label>
+        <button class="btn btn-primary btn-block" type="submit">Save payment</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="assets/js/core.js?v=8"></script>
+  <script src="assets/js/data.js?v=5"></script>
+  <script src="assets/js/cloud.js?v=7"></script>
+  <script>
+    LT.auth.require();
+    LT.managerShell("fees.html");
+
+    (function () {
+      var typeFilter = "all";
+      // venue scope: every number on this page renders through this key
+      var SCOPE = LT.venue.get();
+      document.getElementById("monthLine").textContent =
+        new Date().toLocaleDateString("en-IN", { month: "long", year: "numeric" }) +
+        (SCOPE === "all" ? "" : " · " + LT.venue.label());
+
+      var ledgerTab = "revenue", catFilter = "all";
+
+      // payments + expenses recorded on any device, merged with local + seeds by ref
+      var cloudPayments = [], cloudExpenses = [];
+      if (window.LT_CLOUD) {
+        LT_CLOUD.fetchPayments().then(function (rows) {
+          if (rows && rows.length) {
+            cloudPayments = rows.map(function (r) {
+              // venue may be absent on older cloud rows — null keeps them
+              // visible in every scope (LT.venue.filter keeps falsy keys)
+              return { ref: r.ref, venue: r.venue || null, name: r.name, type: r.type, detail: r.detail, amount: r.amount, mode: r.mode, on: r.on_date };
+            });
+            paintKPIs();
+            render();
+          }
+        });
+        LT_CLOUD.fetchExpenses && LT_CLOUD.fetchExpenses().then(function (rows) {
+          if (rows && rows.length) {
+            cloudExpenses = rows.map(function (r) {
+              return { ref: r.ref, venue: r.venue || null, category: r.category, payee: r.payee, detail: r.detail, amount: r.amount, mode: r.mode, on: r.on_date };
+            });
+            paintKPIs();
+            render();
+          }
+        });
+        // NOTE: tenant_revenue_streams (LT_CLOUD.fetchRevenueStreams) still
+        // keys court revenue by the old per-sport columns server-side and
+        // returns zeros for matchpoint — the LOCAL stream computation below
+        // (finance seed + booking history) is authoritative for this page.
+      }
+
+      /* ===== revenue streams: interactive nested donut (3 levels) =====
+         Level 1 (month): Memberships vs Court bookings — two slices.
+         Level 2 (tap Court bookings): Rally courts vs Urban courts.
+         Level 3 (tap a venue): that venue's court revenue split by channel
+           (Website / Playo / Hudle / Walk-in), proportioned from the booking
+           history's source field.
+         Pie slices AND the rows below both drill; a back link steps up. */
+      var srcColors = { Website: "#a9e717", Playo: "#3fb98a", Hudle: "#5b8def", "Walk-in": "#9aa7b2" };
+      function srcColor(s) { return srcColors[s] || "#8aa0b4"; }
+
+      function sourceSplit(venue) {
+        var by = {};
+        LT_DATA.bookings.forEach(function (b) {
+          if (b.sport !== venue || b.status === "cancelled") return; // sport field = venue pool key
+          var k = b.source || "Walk-in";
+          by[k] = (by[k] || 0) + (b.amount || 0);
+        });
+        return by;
+      }
+
+      function donutSVG(segs, topLabel, bigLabel, hint) {
+        var total = segs.reduce(function (s, x) { return s + x.value; }, 0) || 1;
+        var R = 45, C = 2 * Math.PI * R, off = 0;
+        var rings = segs.map(function (s) {
+          var len = (s.value / total) * C;
+          var el = '<circle class="ds' + (s.drill ? " can" : "") + '" data-key="' + s.key + '" cx="60" cy="60" r="' + R +
+            '" fill="none" stroke="' + s.color + '" stroke-width="17" stroke-dasharray="' + len.toFixed(2) + " " + (C - len).toFixed(2) +
+            '" stroke-dashoffset="' + (-off).toFixed(2) + '" transform="rotate(-90 60 60)"><title>' + s.label + " · " + LT.fmtINR(Math.round(s.value)) + "</title></circle>";
+          off += len; return el;
+        }).join("");
+        return '<svg class="d-svg" viewBox="0 0 120 120">' + rings +
+          '<text class="d-ct" x="60" y="55" text-anchor="middle">' + topLabel + "</text>" +
+          '<text class="d-cb" x="60" y="72" text-anchor="middle">' + bigLabel + "</text>" +
+          (hint ? '<text class="d-hint" x="60" y="86" text-anchor="middle">' + hint + "</text>" : "") + "</svg>";
+      }
+
+      var streamMonths = [], curM = -1, expanded = {};
+      var COURT_COLOR = "#34d399", RALLY_COLOR = "#34d399", URBAN_COLOR = "#8ea2ff";
+
+      /* Membership and court revenue per month from the tenant ledger. */
+      function localStreams() {
+        var fin = LT_DATA.financeFor(SCOPE);
+        return fin.map(function (f) {
+          return { m: f.m, memberships: f.memberships * 1000, rally: f.courts * 1000, urban: 0 };
+        });
+      }
+
+      // one accordion row. `node` (key) makes it expandable with a chevron;
+      // depth indents the tree so Memberships stays visible above the drill.
+      function row(opts) {
+        var pct = Math.round(opts.value / (opts.whole || 1) * 100);
+        var expandable = opts.node && opts.value > 0;
+        var open = expandable && expanded[opts.node];
+        return '<div class="sd-row d' + opts.depth + (expandable ? " node" : "") + (open ? " open" : "") + '"' +
+          (expandable ? ' data-node="' + opts.node + '"' : "") + '>' +
+          '<span class="sd-k">' + (expandable ? '<span class="sd-chev">›</span>' : "") +
+          '<span class="sw" style="background:' + opts.color + ';"></span>' + opts.label + "</span>" +
+          '<span class="sd-v">' + LT.fmtINR(Math.round(opts.value)) + " · " + pct + "%</span></div>";
+      }
+
+      function channelRows(venue, venueRev, depth) {
+        var split = sourceSplit(venue);
+        var sum = Object.keys(split).reduce(function (s, k) { return s + split[k]; }, 0) || 1;
+        return Object.keys(split).map(function (k) {
+          return { label: k, color: srcColor(k), value: venueRev * split[k] / sum };
+        }).filter(function (s) { return s.value > 0; }).sort(function (a, b) { return b.value - a.value; })
+          .map(function (s) { return row({ label: s.label, color: s.color, value: s.value, whole: venueRev, depth: depth || 2 }); }).join("");
+      }
+
+      function renderStreams() {
+        var m = streamMonths[curM]; if (!m) return;
+        var membership = m.memberships, rally = m.rally, urban = m.urban;
+        var courts = rally + urban, total = membership + courts || 1;
+        var scoped = true;
+        var courtLabel = "Manikonda courts";
+        var courtColor = COURT_COLOR;
+
+        // pie stays at the month level so Memberships is always visible
+        var topSegs = [
+          { key: "memberships", label: "Memberships", value: membership, color: "#a9e717" },
+          { key: "court", label: courtLabel, value: courts, color: courtColor, drill: courts > 0 ? 1 : 0 },
+        ].filter(function (s) { return s.value > 0; });
+        document.getElementById("streamDonut").innerHTML =
+          donutSVG(topSegs, m.m, LT.fmtINR(total), courts > 0 ? "tap to expand" : "");
+
+        // detail = an inline accordion tree (nothing gets replaced/hidden)
+        var out = ['<div class="sd-h">' + m.m + " · " + LT.fmtINR(total) + " collected</div>"];
+        out.push(row({ label: "Memberships", color: "var(--gold-grad)", value: membership, whole: total, depth: 0 }));
+        out.push(row({ node: "court", label: courtLabel, color: courtColor, value: courts, whole: total, depth: 0 }));
+        if (expanded.court && courts > 0) {
+          if (scoped) {
+            // 2-way split: the venue's courts drill straight into channels
+            out.push(channelRows("manikonda", courts, 1));
+          } else {
+            out.push(row({ node: "rally", label: "Rally courts", color: RALLY_COLOR, value: rally, whole: courts, depth: 1 }));
+            if (expanded.rally && rally > 0) out.push(channelRows("rally", rally));
+            out.push(row({ node: "urban", label: "Urban courts", color: URBAN_COLOR, value: urban, whole: courts, depth: 1 }));
+            if (expanded.urban && urban > 0) out.push(channelRows("urban", urban));
+          }
+        }
+        document.getElementById("streamDetail").innerHTML = out.join("");
+
+        document.getElementById("streamLegend").innerHTML = scoped
+          ? '<span><span class="sw" style="background:var(--gold-grad);"></span>Memberships ' + Math.round(membership / total * 100) + "%</span>" +
+            '<span><span class="sw" style="background:' + courtColor + ';"></span>' + courtLabel + " " + Math.round(courts / total * 100) + "%</span>"
+          : '<span><span class="sw" style="background:var(--gold-grad);"></span>Memberships ' + Math.round(membership / total * 100) + "%</span>" +
+            '<span><span class="sw" style="background:' + RALLY_COLOR + ';"></span>Rally courts ' + Math.round(rally / total * 100) + "%</span>" +
+            '<span><span class="sw" style="background:' + URBAN_COLOR + ';"></span>Urban courts ' + Math.round(urban / total * 100) + "%</span>";
+      }
+
+      function toggleNode(key) {
+        if (!key) return;
+        expanded[key] = !expanded[key];
+        if (key === "court" && !expanded.court) { expanded.rally = false; expanded.urban = false; }
+        renderStreams();
+      }
+
+      function showMonth(i) {
+        curM = +i; expanded = {};
+        document.querySelectorAll("#streamBars .mo").forEach(function (el, j) { el.classList.toggle("sel", j === +i); });
+        renderStreams();
+      }
+
+      function paintStreams(months) {
+        if (!months || !months.length) return;
+        streamMonths = months;
+        var max = 1;
+        months.forEach(function (m) { var t = m.memberships + m.rally + m.urban; if (t > max) max = t; });
+        document.getElementById("streamBars").innerHTML = months.map(function (m, i) {
+          function seg(cls, v) { return v ? '<i class="' + cls + '" style="height:' + Math.round((v / max) * 108) + 'px;" title="' + LT.fmtINR(v) + '"></i>' : ""; }
+          return '<button type="button" class="mo" data-mo="' + i + '"><div class="stack">' + seg("seg-mem", m.memberships) + seg("seg-rally", m.rally) + seg("seg-urban", m.urban) +
+            '</div><span class="mo-l">' + m.m + "</span></button>";
+        }).join("");
+        document.getElementById("streamBars").addEventListener("click", function (e) {
+          var b = e.target.closest(".mo"); if (b) showMonth(b.dataset.mo);
+        });
+        document.getElementById("streamDonut").addEventListener("click", function (e) {
+          var seg = e.target.closest(".ds.can"); if (seg && seg.dataset.key === "court") toggleNode("court");
+        });
+        document.getElementById("streamDetail").addEventListener("click", function (e) {
+          var node = e.target.closest("[data-node]"); if (node) toggleNode(node.dataset.node);
+        });
+        showMonth(months.length - 1); // default: latest month
+        document.getElementById("streamCard").classList.remove("hide");
+      }
+
+      function allPayments() {
+        var local = LT.store.read("payments", []).concat(LT_DATA.payments);
+        var refs = {};
+        local.forEach(function (p) { if (p.ref) refs[p.ref] = 1; });
+        var merged = local.concat(cloudPayments.filter(function (p) { return !p.ref || !refs[p.ref]; }));
+        return LT.venue.filter(merged, function (p) { return p.venue; });
+      }
+      function allExpenses() {
+        var local = LT.store.read("expenses", []).concat(LT_DATA.expenses || []);
+        var refs = {};
+        local.forEach(function (p) { if (p.ref) refs[p.ref] = 1; });
+        var merged = local.concat(cloudExpenses.filter(function (p) { return !p.ref || !refs[p.ref]; }))
+          .sort(function (a, b) { return a.on < b.on ? 1 : a.on > b.on ? -1 : 0; });
+        // null-venue rows are shared costs — LT.venue.filter keeps them in every scope
+        return LT.venue.filter(merged, function (e) { return e.venue; });
+      }
+
+      function fmtD(iso) { return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short" }); }
+
+      function paintKPIs() {
+        var all = allPayments();
+        var total = all.reduce(function (s, p) { return s + p.amount; }, 0);
+        var court = all.filter(function (p) { return p.type === "Court"; })
+          .reduce(function (s, p) { return s + p.amount; }, 0);
+        LT.countUp(document.getElementById("kpiTotal"), total, { prefix: "₹" });
+        LT.countUp(document.getElementById("kpiCourt"), court, { prefix: "₹" });
+        // net margin of the last CLOSED month (scoped series)
+        var sf = LT_DATA.financeFor(SCOPE);
+        var f = sf[sf.length - 2];
+        document.getElementById("kpiNetLabel").textContent = "Net margin · " + f.m;
+        LT.countUp(document.getElementById("kpiNet"), Math.round(((f.rev - f.exp) / f.rev) * 100), { suffix: "%" });
+        document.getElementById("kpiTotalSub").innerHTML = "across <b>" + all.length + "</b> payments";
+        document.getElementById("kpiCourtSub").innerHTML = "<b>" + (total ? Math.round(court / total * 100) : 0) + "%</b> of intake";
+        document.getElementById("kpiNetSub").innerHTML = "<b>₹" + (f.rev - f.exp) + "k</b> profit";
+      }
+
+      /* ================= revenue vs expenses chart ================= */
+      var F = LT_DATA.financeFor(SCOPE);
+      var focused = -1;
+      var W = 640, H = 250, P = 34;
+      var max = Math.max.apply(null, F.map(function (f) { return f.rev; })) * 1.12;
+      var groupW = (W - 2 * P) / F.length;
+      var barW = Math.min(22, groupW / 3.2);
+      function gx(i) { return P + i * groupW + groupW / 2; }
+      function y(v) { return H - P - (v / max) * (H - 2 * P); }
+
+      function drawChart() {
+        var grid = [0.25, 0.5, 0.75, 1].map(function (g) {
+          var gy = y(max * g * 0.9);
+          return '<line x1="' + P + '" y1="' + gy + '" x2="' + (W - P) + '" y2="' + gy + '" stroke="var(--line)" stroke-width="1"/>' +
+            '<text x="' + (P - 6) + '" y="' + (gy + 3) + '" text-anchor="end" fill="var(--ink-faint)" font-size="9" font-family="var(--font-body)">₹' + Math.round(max * g * 0.9) + 'k</text>';
+        }).join("");
+
+        var groups = F.map(function (f, i) {
+          var cls = "rv-group" + (focused === -1 ? "" : focused === i ? " focus" : " dim");
+          var revH = (H - P) - y(f.rev), expH = (H - P) - y(f.exp);
+          return '<g class="' + cls + '" data-i="' + i + '">' +
+            '<rect class="rv-bar rev" x="' + (gx(i) - barW - 2) + '" y="' + y(f.rev) + '" width="' + barW + '" height="' + revH + '" rx="5" style="animation-delay:' + (i * 70) + 'ms;"/>' +
+            '<rect class="rv-bar exp" x="' + (gx(i) + 2) + '" y="' + y(f.exp) + '" width="' + barW + '" height="' + expH + '" rx="5" style="animation-delay:' + (i * 70 + 45) + 'ms;"/>' +
+            "</g>";
+        }).join("");
+
+        var netLine = F.map(function (f, i) { return (i ? "L" : "M") + gx(i) + " " + y(f.rev - f.exp); }).join(" ");
+        var netDots = F.map(function (f, i) {
+          return '<circle class="rv-net-dot" cx="' + gx(i) + '" cy="' + y(f.rev - f.exp) + '" r="3.4" style="animation-delay:' + (700 + i * 90) + 'ms;"/>';
+        }).join("");
+
+        var labels = F.map(function (f, i) {
+          return '<text class="rv-xlabel' + (focused === i ? " focus" : "") + '" data-i="' + i + '" x="' + gx(i) + '" y="' + (H - 10) + '" text-anchor="middle">' + f.m + "</text>";
+        }).join("");
+
+        document.getElementById("rvHost").innerHTML =
+          '<svg viewBox="0 0 ' + W + " " + H + '">' +
+          '<defs><linearGradient id="rvGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e2ff86"/><stop offset="1" stop-color="#79a900"/></linearGradient></defs>' +
+          grid + groups + '<path class="rv-net" d="' + netLine + '"/>' + netDots + labels +
+          "</svg>" + '<div class="rv-tip" id="rvTip"></div>';
+      }
+
+      function paintDetail() {
+        var box = document.getElementById("rvDetail");
+        document.getElementById("rvHint").style.display = focused === -1 ? "" : "none";
+        if (focused === -1) { box.classList.remove("show"); box.innerHTML = ""; return; }
+        var f = F[focused];
+        var net = f.rev - f.exp;
+        var rows = [
+          ["Memberships", f.memberships, f.rev, "g"],
+          ["Court bookings", f.courts, f.rev, "g"],
+          ["Salaries", f.salaries, f.rev, "r"],
+          ["Court maintenance", f.maintenance, f.rev, "r"],
+          ["Power & utilities", f.power, f.rev, "r"],
+          ["Shuttles & equipment", f.gear, f.rev, "r"],
+        ];
+        box.innerHTML =
+          '<div class="rd-head"><h3>' + f.m + " breakdown</h3>" +
+          '<div class="flex"><span class="pill ' + (net >= 0 ? "green" : "red") + '">Net ' + (net >= 0 ? "+" : "−") + "₹" + Math.abs(net) + 'k</span>' +
+          '<button class="btn btn-ghost btn-sm" id="rdClose">✕ Close</button></div></div>' +
+          '<div class="rd-rows">' + rows.map(function (r, i) {
+            return '<div class="rd-row ' + r[3] + '"><span class="rd-l">' + r[0] + "</span>" +
+              '<span class="rd-bar"><i style="width:' + Math.round((r[1] / r[2]) * 100) + "%;animation-delay:" + (i * 70) + 'ms;"></i></span>' +
+              '<span class="rd-v">₹' + r[1] + "k</span></div>";
+          }).join("") + "</div>";
+        box.classList.add("show");
+      }
+
+      function setFocus(i) {
+        focused = focused === i ? -1 : i;
+        drawChart();
+        paintDetail();
+      }
+
+      var host = document.getElementById("rvHost");
+      host.addEventListener("click", function (e) {
+        var g = e.target.closest(".rv-group, .rv-xlabel");
+        if (g) setFocus(+g.dataset.i);
+      });
+      document.getElementById("rvDetail").addEventListener("click", function (e) {
+        if (e.target.closest("#rdClose")) setFocus(focused);
+      });
+      host.addEventListener("pointermove", function (e) {
+        var tip = document.getElementById("rvTip");
+        var g = e.target.closest(".rv-group");
+        if (!g) { tip.classList.remove("show"); return; }
+        var f = F[+g.dataset.i];
+        var r = host.getBoundingClientRect();
+        tip.innerHTML = "<b>" + f.m + "</b> · Rev ₹" + f.rev + "k · Exp ₹" + f.exp + "k · Net ₹" + (f.rev - f.exp) + "k";
+        tip.style.left = (e.clientX - r.left) + "px";
+        tip.style.top = (e.clientY - r.top) + "px";
+        tip.classList.add("show");
+      });
+      host.addEventListener("pointerleave", function () { document.getElementById("rvTip").classList.remove("show"); });
+
+
+      /* ================= ledger (Revenue / Expenses tabs) ================= */
+      function render() { ledgerTab === "expenses" ? renderExpenses() : renderRevenue(); }
+
+      function renderRevenue() {
+        var list = allPayments().filter(function (p) { return typeFilter === "all" || p.type === typeFilter; });
+        document.getElementById("ledgerHead").innerHTML =
+          "<tr><th>Paid by</th><th>Type</th><th>Detail</th><th>Amount</th><th>Mode</th><th>Date</th></tr>";
+        document.getElementById("rows").innerHTML = list.map(function (p) {
+          var typeTag = p.type === "Court"
+            ? '<span class="cell-tag green">Court</span>'
+            : '<span class="cell-tag gold">Membership</span>';
+          return "<tr><td class='t-name'>" + LT.esc(p.name) + "</td><td>" + typeTag + "</td>" +
+            "<td class='faint'>" + LT.esc(p.detail || "—") + "</td>" +
+            "<td class='num gold' style='font-weight:700;'>" + LT.fmtINR(p.amount) + "</td>" +
+            "<td class='faint'>" + LT.esc(p.mode) + "</td><td>" + fmtD(p.on) + "</td></tr>";
+        }).join("") || '<tr><td colspan="6"><div class="empty-state">No payments recorded yet.</div></td></tr>';
+        var total = list.reduce(function (s, p) { return s + (p.amount || 0); }, 0);
+        document.getElementById("ledgerFoot").innerHTML = list.length
+          ? "<b>" + list.length + "</b> payment" + (list.length === 1 ? "" : "s") + " · collected <b style='color:var(--tx-gold);'>" + LT.fmtINR(total) + "</b>" : "";
+      }
+
+      function renderExpenses() {
+        var list = allExpenses().filter(function (x) { return catFilter === "all" || x.category === catFilter; });
+        document.getElementById("ledgerHead").innerHTML =
+          "<tr><th>Paid to</th><th>Category</th><th>Detail</th><th>Amount</th><th>Mode</th><th>Date</th></tr>";
+        document.getElementById("rows").innerHTML = list.map(function (x) {
+          return "<tr><td class='t-name'>" + LT.esc(x.payee || "—") + "</td>" +
+            "<td><span class='cell-tag'>" + LT.esc(x.category) + "</span></td>" +
+            "<td class='faint'>" + LT.esc(x.detail || "—") + "</td>" +
+            "<td class='num' style='font-weight:700;color:var(--tx-red);'>−" + LT.fmtINR(x.amount) + "</td>" +
+            "<td class='faint'>" + LT.esc(x.mode) + "</td><td>" + fmtD(x.on) + "</td></tr>";
+        }).join("") || '<tr><td colspan="6"><div class="empty-state">No expenses recorded yet.</div></td></tr>';
+        var total = list.reduce(function (s, x) { return s + (x.amount || 0); }, 0);
+        document.getElementById("ledgerFoot").innerHTML = list.length
+          ? "<b>" + list.length + "</b> expense" + (list.length === 1 ? "" : "s") + " · spent <b style='color:var(--tx-red);'>" + LT.fmtINR(total) + "</b>" : "";
+      }
+
+      // build the expense-category sub-filter dropdown
+      document.getElementById("catSelect").innerHTML =
+        '<option value="all">All categories</option>' +
+        LT_DATA.expenseCats.map(function (c) { return '<option value="' + LT.esc(c) + '">' + LT.esc(c) + "</option>"; }).join("");
+
+      document.getElementById("typeSelect").addEventListener("change", function () {
+        typeFilter = this.value; render();
+      });
+      document.getElementById("catSelect").addEventListener("change", function () {
+        catFilter = this.value; render();
+      });
+
+      // Revenue / Expenses tab switch — swaps the sub-filter, header action,
+      // title and table in place.
+      document.getElementById("ledgerTabs").addEventListener("click", function (e) {
+        var btn = e.target.closest(".chip");
+        if (!btn) return;
+        ledgerTab = btn.dataset.tab;
+        this.querySelectorAll(".chip").forEach(function (c) { c.classList.toggle("active", c === btn); });
+        var exp = ledgerTab === "expenses";
+        document.getElementById("ledgerTitle").textContent = exp ? "Recent expenses" : "Recent revenue";
+        document.getElementById("typeFilterWrap").classList.toggle("hide", exp);
+        document.getElementById("catFilterWrap").classList.toggle("hide", !exp);
+        document.getElementById("recBtn").textContent = exp ? "+ Add expense" : "+ Record payment";
+        render();
+      });
+
+      // record payment modal
+      var backdrop = document.getElementById("payBackdrop");
+      document.getElementById("recBtn").addEventListener("click", function () {
+        (ledgerTab === "expenses" ? expBackdrop : backdrop).classList.add("open");
+      });
+      document.getElementById("payClose").addEventListener("click", function () { backdrop.classList.remove("open"); });
+      backdrop.addEventListener("click", function (e) { if (e.target === backdrop) backdrop.classList.remove("open"); });
+
+      /* ---------- add expense modal ---------- */
+      var expBackdrop = document.getElementById("expBackdrop");
+      document.getElementById("expCat").innerHTML = LT_DATA.expenseCats.map(function (c) {
+        return "<option>" + LT.esc(c) + "</option>";
+      }).join("");
+      document.getElementById("expDate").value = LT.today();
+      document.getElementById("expClose").addEventListener("click", function () { expBackdrop.classList.remove("open"); });
+      expBackdrop.addEventListener("click", function (e) { if (e.target === expBackdrop) expBackdrop.classList.remove("open"); });
+      document.getElementById("expForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        var d = new FormData(this), expMsg = document.getElementById("expMsg");
+        var amt = +d.get("amount") || 0;
+        if (amt <= 0) { expMsg.textContent = "Enter the amount spent (₹1 or more)."; expMsg.className = "form-msg error"; return; }
+        expMsg.textContent = "";
+        var rec = {
+          ref: "E-" + Date.now(), category: d.get("category"),
+          payee: (d.get("payee") || "").trim() || d.get("category"), detail: (d.get("detail") || "").trim(),
+          amount: amt, mode: d.get("mode"), on: d.get("on") || LT.today(),
+        };
+        var list = LT.store.read("expenses", []); list.unshift(rec); LT.store.write("expenses", list);
+        if (window.LT_CLOUD && LT_CLOUD.addExpense) LT_CLOUD.addExpense(rec);
+        if (window.LT_CLOUD) LT_CLOUD.track("expense_recorded", { category: rec.category, amount: rec.amount });
+        expBackdrop.classList.remove("open");
+        this.reset();
+        document.getElementById("expDate").value = LT.today();
+        LT.toast("✓ " + LT.fmtINR(amt) + " expense recorded");
+        render();
+      });
+
+      document.getElementById("paySel").innerHTML = LT_ROSTER().map(function (m) {
+        return "<option>" + LT.esc(m.name) + "</option>";
+      }).join("");
+
+      var plan = LT_DATA.plans[0];
+      var chipHost = document.getElementById("planChips");
+      chipHost.innerHTML = LT_DATA.plans.map(function (pl, i) {
+        return '<button type="button" class="chip' + (i === 0 ? " active" : "") + '" data-i="' + i + '">' + pl.label + (pl.note ? " · " + pl.note : "") + "</button>";
+      }).join("");
+      document.getElementById("payAmt").value = plan.amount;
+      chipHost.addEventListener("click", function (e) {
+        var btn = e.target.closest(".chip");
+        if (!btn) return;
+        plan = LT_DATA.plans[+btn.dataset.i];
+        chipHost.querySelectorAll(".chip").forEach(function (c) { c.classList.toggle("active", c === btn); });
+        document.getElementById("payAmt").value = plan.amount;
+      });
+
+      document.getElementById("payForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        var d = new FormData(this);
+        var member = LT_ROSTER().find(function (m) { return m.name === d.get("member"); });
+        var prog = member && LT_DATA.programs.find(function (p) { return p.id === member.program; });
+        var list = LT.store.read("payments", []);
+        var rec = {
+          ref: "P-" + Date.now(),
+          name: d.get("member"), type: "Membership",
+          detail: plan.label + (prog ? " · " + prog.name : ""),
+          amount: +d.get("amount") || plan.amount, mode: d.get("mode"), on: LT.today(),
+        };
+        list.unshift(rec);
+        LT.store.write("payments", list);
+        if (window.LT_CLOUD) {
+          LT_CLOUD.addPayment(rec);
+          LT_CLOUD.track("payment_recorded", { amount: rec.amount, mode: rec.mode });
+        }
+        backdrop.classList.remove("open");
+        LT.toast("Payment recorded ✓");
+        paintKPIs();
+        render();
+      });
+
+      paintKPIs();
+      drawChart();
+      paintStreams(localStreams());
+      render();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d0c1a" />
+  <title>Player Development — Match Point</title>
+  <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg?v=2" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/glass.css?v=18" />
+  <link rel="stylesheet" href="assets/css/progress.css?v=4" />
+  <script>document.documentElement.dataset.theme = localStorage.getItem("mp-theme") || "dark"; document.documentElement.classList.add("lt-js");</script>
+</head>
+<body>
+  <div class="lt-bg" aria-hidden="true"></div>
+  <main class="lt-page progress-page">
+    <div class="card-head progress-title">
+      <div><div class="kicker">Player development</div><h2>Progress intelligence</h2><div class="sub">Coach-verified skills, level movement and academy-wide talent signals.</div></div>
+      <button class="btn btn-primary btn-sm" id="frameworkBtn">View skill framework</button>
+    </div>
+
+    <section class="lt-grid cols-4 progress-kpis" aria-label="Progression summary">
+      <button class="glass glass-hover kpi reveal active" data-signal="all"><span class="stat-copy">Tracked players</span><span class="stat-value" id="kpiTracked">—</span><span class="delta">Across 5 pathway levels</span></button>
+      <button class="glass glass-hover kpi reveal d1" data-signal="fast"><span class="stat-copy">Fast learners</span><span class="stat-value" id="kpiFast">—</span><span class="delta up">Moving ≥35% faster</span></button>
+      <button class="glass glass-hover kpi reveal d2" data-signal="ready"><span class="stat-copy">Ready for review</span><span class="stat-value" id="kpiReady">—</span><span class="delta up">All level skills signed off</span></button>
+      <button class="glass glass-hover kpi reveal d3" data-signal="attention"><span class="stat-copy">Needs attention</span><span class="stat-value" id="kpiStalled">—</span><span class="delta down">Plateau, pause or managed load</span></button>
+    </section>
+
+    <section class="glass glass-card reveal coach-accountability"><div class="card-head"><div><div class="kicker">Staff monitoring</div><h2>Coach development coverage</h2></div><span class="pill gold">Assessment accountability</span></div><div class="coach-monitor" id="coachMonitor"></div></section>
+
+    <section class="progress-overview">
+      <article class="glass glass-card reveal">
+        <div class="card-head"><div><div class="kicker">Academy pathway</div><h2>Level distribution</h2></div><span class="pill gold" id="avgMove">—</span></div>
+        <div class="level-distribution" id="levelDistribution"></div>
+      </article>
+      <article class="glass glass-card reveal d1">
+        <div class="card-head"><div><div class="kicker">Talent radar</div><h2>Coach actions</h2></div><span class="pill green">Live</span></div>
+        <div class="talent-list" id="talentList"></div>
+      </article>
+    </section>
+
+    <section class="glass glass-card roster-card reveal">
+      <div class="card-head roster-head"><div><div class="kicker">All players</div><h2>Development roster</h2></div><div class="progress-filters"><input type="search" id="progressSearch" placeholder="Search player…" /><span class="lt-filter"><select id="levelFilter" aria-label="Filter by level"><option value="all">All levels</option></select></span><span class="lt-filter"><select id="signalFilter" aria-label="Filter by signal"><option value="all">All signals</option><option value="fast">Fast learners</option><option value="ready">Ready for review</option><option value="attention">All needing attention</option><option value="stalled">Plateau / overdue</option><option value="managed">Managed / paused</option><option value="on-track">On track</option></select></span></div></div>
+      <div class="table-wrap progress-table-wrap"><table class="lt-table tight progress-table"><thead><tr><th>Player</th><th>Current level</th><th>Skills</th><th>At level</th><th>Learning speed</th><th>Coach signal</th></tr></thead><tbody id="progressRows"></tbody></table></div>
+      <div class="empty-state hide" id="progressEmpty">No players match these filters.</div>
+    </section>
+  </main>
+
+  <div class="lt-modal-backdrop progress-backdrop" id="progressBackdrop" role="dialog" aria-modal="true" aria-labelledby="playerName">
+    <section class="lt-modal glass progress-drawer">
+      <header class="progress-drawer-head"><div class="player-heading"><span class="profile-avatar" id="playerAvatar">MP</span><div><div class="kicker" id="playerLevel">Player pathway</div><h2 id="playerName">Player</h2><div class="sub" id="playerMeta"></div></div></div><button class="btn btn-icon btn-glass" id="progressClose" aria-label="Close player development">×</button></header>
+      <div class="progress-drawer-body">
+        <div class="profile-summary" id="profileSummary"></div>
+        <div class="training-status-control"><div><div class="kicker">Training availability</div><strong>Player training status</strong><span id="trainingStatusGuidance">Controls coach alerts and promotion eligibility.</span></div><span class="lt-filter"><select id="trainingStatusSelect" aria-label="Player training status"><option value="active">Active</option><option value="load-managed">Load managed</option><option value="paused">Paused</option><option value="return-to-play">Return to play</option><option value="exited">Exited pathway</option></select></span></div>
+        <section class="profile-section"><div class="profile-section-head"><div><div class="kicker">Player care</div><h3>Load & participation constraints</h3></div><span class="sub">Operational guidance—not a medical record</span></div><form class="compact-form constraint-form" id="constraintForm"><span class="lt-filter"><select id="constraintCategory" aria-label="Constraint category"><option value="load">Training load</option><option value="movement">Movement modification</option><option value="medical-clearance">Clearance required</option><option value="schedule">Schedule</option><option value="other">Other</option></select></span><input id="constraintText" type="text" placeholder="What should coaches modify?" required /><input id="constraintReview" type="date" aria-label="Constraint review date" /><button class="btn btn-primary" type="submit">Add</button></form><div class="compact-list" id="playerConstraints"></div></section>
+        <section class="profile-section"><div class="profile-section-head"><div><div class="kicker">Level journey</div><h3>Movement timeline</h3></div><span class="pill" id="velocityPill">—</span></div><div class="level-timeline" id="levelTimeline"></div></section>
+        <section class="profile-section"><div class="profile-section-head"><div><div class="kicker">Coach sign-off</div><h3 id="checklistTitle">Current-level checklist</h3></div><span class="sub">Tap a skill to update its state</span></div><div class="skill-groups" id="skillGroups"></div></section>
+        <section class="profile-section"><div class="profile-section-head"><div><div class="kicker">Development plan</div><h3>Player goals</h3></div><span class="sub">Specific, observable and time-bound</span></div><form class="goal-form" id="goalForm"><input id="goalText" type="text" placeholder="Add a development goal…" required /><input id="goalDate" type="date" aria-label="Goal target date" /><button class="btn btn-primary" type="submit">Add goal</button></form><div class="player-goals" id="playerGoals"></div></section>
+        <section class="profile-section"><div class="profile-section-head"><div><div class="kicker">Session evidence</div><h3>Training observation</h3></div><span class="sub">Quick coach record after a session</span></div><form class="compact-form observation-form" id="observationForm"><input id="observationFocus" type="text" placeholder="Session focus" required /><span class="lt-filter"><select id="observationEffort" aria-label="Effort"><option value="3">Effort 3/5</option><option value="1">Effort 1/5</option><option value="2">Effort 2/5</option><option value="4">Effort 4/5</option><option value="5">Effort 5/5</option></select></span><span class="lt-filter"><select id="observationMovement" aria-label="Movement quality"><option value="3">Movement 3/5</option><option value="1">Movement 1/5</option><option value="2">Movement 2/5</option><option value="4">Movement 4/5</option><option value="5">Movement 5/5</option></select></span><input id="observationNote" type="text" placeholder="Optional evidence note" /><button class="btn btn-primary" type="submit">Record</button></form><div class="compact-list" id="playerObservations"></div></section>
+        <section class="profile-section"><div class="profile-section-head"><div><div class="kicker">Formal checkpoint</div><h3>Development review</h3></div><span class="pill" id="reviewDuePill">—</span></div><form class="compact-form review-form" id="reviewForm"><span class="lt-filter"><select id="reviewOutcome" aria-label="Review outcome"><option value="continue">Continue pathway</option><option value="promote">Recommend promotion</option><option value="adjust-plan">Adjust plan</option><option value="pause">Pause pathway</option><option value="return-to-play">Return-to-play plan</option></select></span><input id="nextReviewDate" type="date" aria-label="Next review date" required /><input id="reviewNote" type="text" placeholder="Review decision and evidence" /><button class="btn btn-primary" type="submit">Complete review</button></form><div class="compact-list" id="playerReviews"></div></section>
+        <section class="profile-section"><div class="profile-section-head"><div><div class="kicker">Coach journal</div><h3>Assessment notes</h3></div></div><form class="note-form" id="noteForm"><textarea id="noteText" rows="2" placeholder="Add an observable coaching note…" required></textarea><button class="btn btn-primary" type="submit">Save note</button></form><div class="coach-notes" id="coachNotes"></div></section>
+      </div>
+      <footer class="progress-drawer-foot"><div><strong id="gateTitle">Promotion gate</strong><span id="gateCopy">Complete required competencies for a coach review.</span></div><button class="btn btn-primary" id="promoteBtn" disabled>Promote player</button></footer>
+    </section>
+  </div>
+
+  <div class="lt-modal-backdrop" id="frameworkBackdrop" role="dialog" aria-modal="true" aria-labelledby="frameworkTitle">
+    <section class="lt-modal glass framework-modal"><div class="modal-head"><div><div class="kicker">Match Point methodology</div><h2 id="frameworkTitle">Five-level skill framework</h2></div><button class="btn btn-icon btn-glass" id="frameworkClose" aria-label="Close framework">×</button></div><p class="sub framework-intro">A coach signs off observable competencies. Learning speed helps prioritise attention; it never replaces coaching judgement.</p><div class="framework-levels" id="frameworkLevels"></div></section>
+  </div>
+
+  <script src="assets/js/core.js?v=8"></script>
+  <script src="assets/js/data.js?v=6"></script>
+  <script src="assets/js/cloud.js?v=7"></script>
+  <script src="assets/js/progress-data.js?v=3"></script>
+  <script src="assets/js/progress.js?v=4"></script>
+</body>
+</html>

@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d0c1a" />
+  <title>Bookings — Match Point</title>
+  <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg?v=2" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/glass.css?v=18" />
+  <script>document.documentElement.dataset.theme = localStorage.getItem("mp-theme") || "dark"; document.documentElement.classList.add("lt-js");</script>
+  <style>
+    .req-tray { display: flex; flex-direction: column; gap: 8px; }
+    .req-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 14px;
+      border: 1px solid rgba(154,168,255,.35); background: rgba(154,168,255,.07); border-radius: var(--r-md); }
+    .req-row .rq-who { font-weight: 700; color: var(--ink-hi); font-size: 13.5px; }
+    .req-row .rq-what { font-size: 12.5px; color: var(--ink-mid); }
+    .req-row .rq-amt { font-weight: 700; color: var(--tx-gold); font-size: 13px; }
+
+    /* channels split */
+    .ch-bar { display: flex; height: 14px; border-radius: 99px; overflow: hidden; gap: 2px; }
+    .ch-bar i { display: block; height: 100%; transform-origin: left; animation: lt-fill-bar .8s var(--ease-spring) both; }
+    .ch-bar .c-Website { background: var(--gold-grad); }
+    .ch-bar .c-Playo { background: linear-gradient(115deg, #6ee7b7, #34d399); }
+    .ch-bar .c-Hudle { background: linear-gradient(115deg, #b8c4ff, #9aa8ff); }
+    .ch-bar .c-Walk-in { background: rgba(255, 255, 255, 0.3); }
+    :root[data-theme="light"] .ch-bar .c-Walk-in { background: rgba(20, 50, 34, 0.3); }
+    .ch-legend { display: flex; gap: 8px 18px; flex-wrap: wrap; margin-top: 10px; font-size: 12.5px; color: var(--ink-mid); }
+    .ch-legend .sw { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+    .ch-legend b { color: var(--ink-hi); }
+
+    .tl-legend .sw-free { background: rgba(255, 255, 255, 0.16); }
+    :root[data-theme="light"] .tl-legend .sw-free { background: rgba(20, 50, 34, 0.16); }
+    .sched-row .sr-acts { display: flex; gap: 4px; flex: none; align-items: center; }
+    .sched-row .sr-acts .btn-icon { width: 30px; height: 30px; font-size: 13px; }
+    .sched-row.free .sr-acts .btn-icon { opacity: 0; transition: opacity .2s ease; }
+    .sched-row.free:hover .sr-acts .btn-icon, .sched-row.free:active .sr-acts .btn-icon { opacity: .8; }
+
+    /* connect channels (credentials feed the central CourtSync engine) */
+    .chn-intro { font-size: 12.5px; color: var(--ink-mid); margin-bottom: var(--gap-3); }
+    .chn { border: 1px solid var(--line); border-radius: var(--r-md); padding: 12px 14px; margin-bottom: 10px; }
+    .chn-h { display: flex; align-items: center; gap: 8px; font-weight: 700; color: var(--ink-hi); font-size: 14px; margin-bottom: 8px; }
+    .chn-h .dot { width: 11px; height: 11px; border-radius: 3px; flex: none; }
+    .chn-h .chn-ok { margin-left: auto; font-size: 11px; font-weight: 700; color: var(--tx-green); }
+    .chn select.chn-m { width: 100%; margin-bottom: 8px; }
+    .chn-creds { display: flex; flex-direction: column; gap: 8px; }
+    .chn-creds .ci { width: 100%; }
+    .chn-note { font-size: 11.5px; color: var(--ink-low); }
+    .chn .chn-save { margin-top: 10px; }
+    .chn-status { display: flex; gap: 6px 14px; flex-wrap: wrap; font-size: 11.5px; color: var(--ink-low); margin-top: 8px; }
+    .chn-status .on { color: var(--tx-green); font-weight: 700; }
+
+    /* reason sheet (in-app cancel/block confirm) */
+    .rs-sub { font-size: 12.5px; color: var(--ink-mid); line-height: 1.55; margin: 0 0 14px; }
+    .rs-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .rs-chip { cursor: pointer; font-size: 12.5px; font-weight: 600; padding: 7px 13px; border-radius: 99px;
+      border: 1px solid var(--line); background: var(--tile-bg); color: var(--ink-mid); transition: all .15s ease; }
+    .rs-chip.sel { border-color: var(--tx-gold); background: rgba(255, 156, 51, 0.14); color: var(--ink-hi); }
+    .rs-note { width: 100%; margin-bottom: 16px; }
+    .rs-acts { display: flex; gap: 10px; }
+    .rs-acts .btn { flex: 1; }
+    #rsConfirm { background: var(--gold-grad); color: #1c1503; font-weight: 700; }
+    #rsConfirm.danger { background: linear-gradient(115deg, #ff8a8a, #e24b4a); color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="lt-bg" aria-hidden="true"></div>
+
+  <main class="lt-page">
+    <div class="card-head" style="margin-bottom: 0;">
+      <div>
+        <div class="kicker">Court Bookings</div>
+        <h2>Courts at a glance</h2>
+        <div class="sub" id="dayLine"></div>
+      </div>
+      <div class="flex wrap">
+        <input type="date" id="bkDate" style="width:auto;" />
+        <span class="pill gold" id="dayStats">—</span>
+        <button class="btn btn-primary btn-sm" id="addBkBtn">+ Add booking</button>
+      </div>
+    </div>
+
+    <!-- booking channels, last 30 days -->
+    <div class="glass glass-card tight reveal">
+      <div class="card-head" style="margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+        <div><div class="kicker">Channels</div><h2 style="font-size:16px;">Bookings by source · last 30 days</h2></div>
+        <div class="flex" style="gap: 8px;">
+          <button class="btn btn-glass btn-sm" id="chnBtn" type="button" style="display:inline-flex;align-items:center;gap:6px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M9 17H7A5 5 0 0 1 7 7h2M15 7h2a5 5 0 0 1 0 10h-2M8 12h8"/></svg>
+            Connect channels</button>
+          <button class="btn btn-primary btn-sm" id="syncBtn" type="button" style="display:inline-flex;align-items:center;gap:6px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg>
+            Sync channels</button>
+        </div>
+      </div>
+      <div class="ch-bar" id="chBar"></div>
+      <div class="ch-legend" id="chLegend"></div>
+      <div class="chn-status" id="chnStatus"></div>
+    </div>
+
+    <!-- unassigned web requests -->
+    <div class="glass glass-card tight hide" id="reqCard">
+      <div class="card-head" style="margin-bottom: 10px;">
+        <div><div class="kicker">New requests</div><h2 style="font-size:16px;">Waiting for a court</h2></div>
+      </div>
+      <div class="req-tray" id="reqTray"></div>
+    </div>
+
+    <!-- venue filter -->
+    <div style="text-align:center;">
+      <span class="lt-filter">
+        <select id="venueSelect" aria-label="Filter courts by venue">
+          <option value="all">All courts · 3</option>
+          <option value="manikonda">Manikonda · 3 courts</option>
+        </select>
+      </span>
+    </div>
+
+    <!-- court photo grid -->
+    <div class="court-grid" id="courtGrid"></div>
+
+    <div class="tl-legend glass glass-card tight" style="justify-content:center;">
+      <span><span class="sw" style="background:linear-gradient(115deg,#e2ff86,#a9e717);"></span>Booked</span>
+      <span><span class="sw" style="background:repeating-linear-gradient(45deg, rgba(154,168,255,.55) 0 4px, rgba(154,168,255,.12) 4px 8px);"></span>Pending</span>
+      <span><span class="sw sw-free"></span>Free</span>
+      <span><span class="sw sw-free" style="opacity:.3;"></span>Past</span>
+    </div>
+  </main>
+
+  <!-- add booking modal (manual entry, incl. Playo/Hudle until APIs land) -->
+  <div class="lt-modal-backdrop" id="abBackdrop">
+    <div class="glass lt-modal">
+      <div class="modal-head">
+        <div><div class="kicker">Add booking</div><h2 style="font-size:20px;">Record a court booking</h2></div>
+        <button class="btn btn-icon btn-ghost" id="abClose">✕</button>
+      </div>
+      <form id="abForm" class="lt-grid" style="gap: var(--gap-3);">
+        <label class="field"><span>Booked by</span><input type="text" name="name" placeholder="Name / company" required /></label>
+        <div class="lt-grid cols-2" style="gap: var(--gap-2);">
+          <label class="field"><span>Phone <span class="opt">(optional)</span></span><input type="tel" name="phone" placeholder="98xxxxxxxx" /></label>
+          <label class="field"><span>Source</span><select name="source" id="abSource"></select></label>
+        </div>
+        <div class="lt-grid cols-2" style="gap: var(--gap-2);">
+          <label class="field"><span>Date</span><input type="date" name="date" id="abDate" /></label>
+          <label class="field"><span>Hour slot</span><select name="hour" id="abHour"></select></label>
+        </div>
+        <div class="lt-grid cols-2" style="gap: var(--gap-2);">
+          <label class="field"><span>Playing at</span><select name="venue" id="abVenue"><option value="manikonda">Match Point · Manikonda</option></select></label>
+          <label class="field"><span>Court</span><select name="court" id="abCourt"><option value="">Auto-assign</option></select></label>
+        </div>
+        <div class="sub" id="abRate" style="font-size:12.5px;"></div>
+        <div class="form-msg" id="abMsg" style="min-height:0;"></div>
+        <button class="btn btn-primary btn-block" type="submit">Save booking</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- connect channels modal — academy staff link marketplaces; creds -> Vault -->
+  <div class="lt-modal-backdrop" id="chnBackdrop">
+    <div class="glass lt-modal">
+      <div class="modal-head">
+        <div><div class="kicker">Channels</div><h2 style="font-size:20px;">Connect booking channels</h2></div>
+        <button class="btn btn-icon btn-ghost" id="chnClose">✕</button>
+      </div>
+      <div class="chn-intro">
+        Most marketplaces have no public API — pick how each one stays in sync.
+        Your login is encrypted and used only to keep this venue's board in sync
+        across every channel; a slot taken anywhere is blocked everywhere.
+      </div>
+      <div id="chnForm"></div>
+    </div>
+  </div>
+
+  <!-- court schedule modal -->
+  <div class="lt-modal-backdrop" id="cmBackdrop">
+    <div class="glass lt-modal court-modal" id="cmModal">
+      <div class="cm-hero">
+        <img id="cmPhoto" alt="" />
+        <div class="cm-title"><div class="sub" id="cmSub"></div><h2 id="cmName"></h2></div>
+        <button class="btn btn-icon btn-ghost cm-close" id="cmClose">✕</button>
+      </div>
+      <div class="cm-body">
+        <div class="flex between wrap">
+          <span class="pill gold" id="cmSummary"></span>
+          <span class="faint" style="font-size:12px;" id="cmDate"></span>
+        </div>
+        <div class="sched" id="cmSched"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- reason sheet: friendly in-app replacement for window.prompt (cancel / block) -->
+  <div class="lt-modal-backdrop" id="rsBackdrop" style="z-index: 95;">
+    <div class="glass lt-modal" style="width: min(430px, 100%);">
+      <div class="modal-head">
+        <div><div class="kicker" id="rsKicker"></div><h2 id="rsTitle" style="font-size:19px;"></h2></div>
+        <button class="btn btn-icon btn-ghost" id="rsClose" aria-label="Close">✕</button>
+      </div>
+      <p class="rs-sub" id="rsSub"></p>
+      <div class="rs-chips" id="rsChips"></div>
+      <input type="text" class="rs-note" id="rsNote" placeholder="Add a note (optional)" />
+      <div class="rs-acts">
+        <button class="btn btn-glass" id="rsKeep" type="button">Keep it</button>
+        <button class="btn" id="rsConfirm" type="button"></button>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/core.js?v=8"></script>
+  <script src="assets/js/data.js?v=5"></script>
+  <script src="assets/js/cloud.js?v=7"></script>
+  <script>
+    LT.auth.require();
+    LT.managerShell("bookings.html");
+
+    (function () {
+      var dateInput = document.getElementById("bkDate");
+      dateInput.value = LT.today();
+      var openCourt = null;
+
+      function overrides() { return LT.store.read("booking-status", {}); }
+
+      // local board filter seeds from the global venue scope (nav dropdown);
+      // staff can still override it here without persisting the change
+      var venueFilter = LT.venue.get();
+      document.getElementById("venueSelect").value = venueFilter;
+      // true when a booking belongs to the locally selected venue
+      function inVenue(b) {
+        return venueFilter === "all" || (b.sport || LT_SLOTS.venueOf(b.court)) === venueFilter;
+      }
+
+      // booking channels come from the platform MASTER LIST (get_channels);
+      // add a channel in the DB once and it appears here, in the add-booking
+      // form and the channel chart. Fallback list keeps parity offline.
+      var CHANNELS = [
+        { id: "Website", label: "Website", color: "#ffb35c" },
+        { id: "Playo", label: "Playo", color: "#34d399" },
+        { id: "Hudle", label: "Hudle", color: "#9aa8ff" },
+        { id: "Walk-in", label: "Walk-in", color: "#9aa3b2" },
+      ];
+      function chColor(id) { var c = CHANNELS.find(function (x) { return x.id === id; }); return c ? c.color : "#9aa3b2"; }
+
+      // cloud ledger — bookings recorded on any device join the local view
+      var cloudBookings = [];
+      if (window.LT_CLOUD) {
+        var since = new Date(); since.setDate(since.getDate() - 31);
+        LT_CLOUD.fetchBookings(LT.isoDate(since)).then(function (rows) {
+          if (rows && rows.length) { cloudBookings = rows; render(); paintChannels(); }
+        });
+        LT_CLOUD.fetchChannels().then(function (list) {
+          if (list && list.length) { CHANNELS = list; buildSourceSelect(); paintChannels(); }
+        });
+      }
+
+      function allBookings() {
+        var ov = overrides();
+        var local = LT.store.read("bookings", []).concat(LT_DATA.bookings);
+        var seen = {};
+        local.forEach(function (b) { seen[b.id] = 1; });
+        return local.concat(cloudBookings.filter(function (b) { return !seen[b.id]; })).map(function (b) {
+          var o = Object.assign({}, b, ov[b.id] ? { status: ov[b.id], court: ov[b.id + ":court"] || b.court } : {});
+          o.court = LT_SLOTS.courtId(o.court);
+          if (!o.sport) o.sport = LT_SLOTS.venueOf(o.court);
+          return o;
+        });
+      }
+
+      function dayBookings() {
+        return allBookings().filter(function (b) { return b.date === dateInput.value; });
+      }
+
+      function hourLabelShort(h) { var ap = h >= 12 ? "PM" : "AM"; var v = h % 12 || 12; return v + ap; }
+
+      function statusOfCourt(list, nowH, isToday) {
+        var inPlay = isToday && list.find(function (b) { return b.hour === nowH && b.status === "confirmed"; });
+        if (inPlay) return { cls: "gold", label: "In play · till " + hourLabelShort(inPlay.hour + 1) };
+        var next = list.filter(function (b) { return !isToday || b.hour > nowH; }).sort(function (a, b) { return a.hour - b.hour; })[0];
+        if (next) return { cls: "green", label: (isToday ? "Free · next " : "First booking ") + hourLabelShort(next.hour) };
+        return { cls: "green", label: "Free all day" };
+      }
+
+      function srcPill(src, small) {
+        if (!src) return "";
+        return '<span class="pill"' + (small ? ' style="font-size:10px;padding:2px 9px;"' : "") +
+          '><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:' + chColor(src) + ';margin-right:5px;vertical-align:0;"></span>' + LT.esc(src) + "</span>";
+      }
+
+      function paintChannels() {
+        var cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
+        var iso = LT.isoDate(cutoff);
+        var counts = {};
+        CHANNELS.forEach(function (c) { counts[c.id] = 0; });
+        allBookings().forEach(function (b) {
+          if (!inVenue(b)) return;
+          if (b.date >= iso && b.date <= LT.today() && counts[b.source || "Website"] !== undefined) counts[b.source || "Website"]++;
+        });
+        var total = Object.keys(counts).reduce(function (s, k) { return s + counts[k]; }, 0) || 1;
+        document.getElementById("chBar").innerHTML = CHANNELS.map(function (c, i) {
+          var pct = (counts[c.id] / total) * 100;
+          return '<i style="width:' + pct + '%;background:' + c.color + ';animation-delay:' + (i * 90) + 'ms;" title="' + LT.esc(c.label) + ": " + counts[c.id] + '"></i>';
+        }).join("");
+        document.getElementById("chLegend").innerHTML = CHANNELS.map(function (c) {
+          return '<span><span class="sw" style="background:' + c.color + ';"></span>' + LT.esc(c.label) + " <b>" + counts[c.id] + "</b></span>";
+        }).join("");
+      }
+
+      /* ---- connect channels: academy staff link the marketplaces themselves.
+         The method + (optional) credentials are encrypted into Vault by the
+         connect_integration RPC and read by the central CourtSync engine — the
+         academy never logs into CourtSync. Website/Walk-in need no connection. */
+      var syncable = ["Playo", "Hudle"];
+      function agoShort(ts) { var m = (Date.now() - new Date(ts)) / 60000; return m < 60 ? Math.max(1, Math.round(m)) + "m ago" : m < 1440 ? Math.round(m / 60) + "h ago" : Math.round(m / 1440) + "d ago"; }
+      function paintChnStatus() {
+        var host = document.getElementById("chnStatus");
+        if (!host || !window.LT_CLOUD || !LT_CLOUD.fetchIntegrations) return;
+        LT_CLOUD.fetchIntegrations().then(function (rows) {
+          var by = {}; (rows || []).forEach(function (r) { by[r.channel] = r; });
+          host.innerHTML = syncable.map(function (id) {
+            var r = by[id];
+            if (r && r.enabled) return '<span><span class="on">● ' + LT.esc(id) + "</span> · " + (r.last_sync_at ? "synced " + agoShort(r.last_sync_at) : "connected") + "</span>";
+            return "<span>○ " + LT.esc(id) + " · not connected</span>";
+          }).join("");
+        });
+      }
+
+      var chnBackdrop = document.getElementById("chnBackdrop");
+      function openChannels() {
+        var host = document.getElementById("chnForm");
+        var opts = [["manual", "Manual — we block it, you track"], ["autologin", "Assisted sign-in — we sign in for you"], ["api", "API key (if the partner offers one)"], ["off", "Off"]];
+        function wire(rowEl) {
+          var sel = rowEl.querySelector(".chn-m"), creds = rowEl.querySelector(".chn-creds");
+          function renderCreds() {
+            var m = sel.value;
+            creds.innerHTML = m === "api" ? "<input type='text' class='ci' data-k='api_key' placeholder='Partner API key' />"
+              : m === "autologin" ? "<input type='text' class='ci' data-k='username' placeholder='Partner login (email / phone)' /><input type='password' class='ci' data-k='password' placeholder='Password' />"
+                : m === "manual" ? "<span class='chn-note'>You block this channel yourself; we keep the board in sync.</span>"
+                  : "<span class='chn-note'>Not synced.</span>";
+          }
+          renderCreds(); sel.addEventListener("change", renderCreds);
+          rowEl.querySelector(".chn-save").addEventListener("click", function () {
+            var btn = this; btn.disabled = true;
+            var m = sel.value, enabled = m !== "off", method = m === "off" ? "manual" : m, cr = null;
+            var ins = rowEl.querySelectorAll(".ci");
+            if (ins.length) { cr = {}; Array.prototype.forEach.call(ins, function (i) { if (i.value) cr[i.dataset.k] = i.value; }); if (!Object.keys(cr).length) cr = null; }
+            if (!window.LT_CLOUD || !LT_CLOUD.connectIntegration) { btn.disabled = false; LT.toast("Sync engine offline — try again later"); return; }
+            LT_CLOUD.connectIntegration(rowEl.dataset.ch, method, cr, enabled).then(function () {
+              btn.disabled = false; LT.toast(rowEl.dataset.ch + " saved ✓"); paintChnStatus();
+            }).catch(function (e) { btn.disabled = false; LT.toast("Couldn't save: " + (e && e.message || "error")); });
+          });
+        }
+        function build(by) {
+          host.innerHTML = syncable.map(function (id) {
+            var c = CHANNELS.find(function (x) { return x.id === id; }) || { id: id, label: id, color: "#9aa3b2" };
+            var row = by[id] || {}, cfg = row.config || {};
+            var m = (row.enabled === false) ? "off" : (cfg.method || "manual");
+            return "<div class='chn' data-ch='" + LT.esc(id) + "'>" +
+              "<div class='chn-h'><span class='dot' style='background:" + c.color + "'></span>" + LT.esc(c.label) +
+              (cfg.secret_id ? "<span class='chn-ok'>connected</span>" : "") + "</div>" +
+              "<select class='chn-m'>" + opts.map(function (o) { return "<option value='" + o[0] + "'" + (o[0] === m ? " selected" : "") + ">" + o[1] + "</option>"; }).join("") + "</select>" +
+              "<div class='chn-creds'></div><button class='btn btn-primary btn-sm chn-save' type='button'>Save</button></div>";
+          }).join("");
+          Array.prototype.forEach.call(host.querySelectorAll(".chn"), wire);
+        }
+        host.innerHTML = "<div class='chn-note'>Loading…</div>";
+        chnBackdrop.classList.add("open");
+        var p = (window.LT_CLOUD && LT_CLOUD.fetchIntegrationConfig) ? LT_CLOUD.fetchIntegrationConfig() : Promise.resolve([]);
+        p.then(function (rows) { var by = {}; (rows || []).forEach(function (r) { by[r.channel] = r; }); build(by); }).catch(function () { build({}); });
+      }
+      document.getElementById("chnBtn").addEventListener("click", openChannels);
+      document.getElementById("chnClose").addEventListener("click", function () { chnBackdrop.classList.remove("open"); });
+      chnBackdrop.addEventListener("click", function (e) { if (e.target === chnBackdrop) chnBackdrop.classList.remove("open"); });
+      paintChnStatus();
+
+      // Sync channels: pull any new partner bookings, drain the block queue,
+      // then refresh the board + channel mix + connection status.
+      document.getElementById("syncBtn").addEventListener("click", function () {
+        var btn = this; if (btn.disabled) return;
+        var orig = btn.innerHTML; btn.disabled = true; btn.textContent = "Syncing…";
+        if (!window.LT_CLOUD || !LT_CLOUD.fetchIntegrations) { btn.disabled = false; btn.innerHTML = orig; LT.toast("Sync engine offline"); return; }
+        LT_CLOUD.fetchIntegrations().then(function (rows) {
+          var enabled = (rows || []).filter(function (r) { return r.enabled; });
+          return Promise.all(enabled.map(function (r) { return LT_CLOUD.partnerSync(r.channel).catch(function () { return null; }); }))
+            .then(function (results) {
+              var imported = results.reduce(function (s, r) { return s + (r && r.imported ? r.imported : 0); }, 0);
+              return (LT_CLOUD.processSyncJobs ? LT_CLOUD.processSyncJobs(50).catch(function () { return null; }) : Promise.resolve())
+                .then(function () { return imported; });
+            });
+        }).then(function (imported) {
+          var since = new Date(); since.setDate(since.getDate() - 31);
+          return LT_CLOUD.fetchBookings(LT.isoDate(since)).then(function (rows) {
+            if (rows && rows.length) cloudBookings = rows;
+            render(); paintChannels(); paintChnStatus();
+            LT.toast(imported ? imported + " new booking" + (imported === 1 ? "" : "s") + " pulled ✓" : "Channels up to date ✓");
+          });
+        }).catch(function (e) {
+          LT.toast("Sync failed: " + (e && e.message || "error"));
+        }).then(function () { btn.disabled = false; btn.innerHTML = orig; });
+      });
+
+      function render() {
+        var day = dayBookings();
+        var isToday = dateInput.value === LT.today();
+        var nowH = new Date().getHours();
+        var hours = [];
+        for (var h = LT_DATA.slotHours.open; h < LT_DATA.slotHours.close; h++) hours.push(h);
+
+        document.getElementById("dayLine").textContent =
+          new Date(dateInput.value).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+        var scoped = day.filter(inVenue); // strip follows the local venue dropdown
+        var pending = scoped.filter(function (b) { return b.status === "pending"; }).length;
+        var revenue = scoped.reduce(function (s, b) { return s + b.amount; }, 0);
+        document.getElementById("dayStats").textContent =
+          scoped.length + " bookings · " + pending + " pending · " + LT.fmtINR(revenue);
+
+        // requests without a court yet
+        var waiting = day.filter(function (b) { return !b.court && b.status === "pending"; });
+        document.getElementById("reqCard").classList.toggle("hide", waiting.length === 0);
+        document.getElementById("reqTray").innerHTML = waiting.map(function (b) {
+          return '<div class="req-row"><span class="rq-who">' + LT.esc(b.name) + "</span>" +
+            '<span class="rq-what">' + LT_SLOTS.label(b.hour) + (b.phone ? " · " + LT.esc(b.phone) : "") + "</span>" +
+            srcPill(b.source, true) +
+            '<span class="grow"></span><span class="rq-amt">' + LT.fmtINR(b.amount) + "</span>" +
+            '<button class="btn btn-primary btn-sm" data-confirm="' + b.id + '">Confirm &amp; assign</button></div>';
+        }).join("");
+
+        // court cards
+        var courts = LT_DATA.courtsMeta.filter(function (c) { return venueFilter === "all" || c.sport === venueFilter; });
+        document.getElementById("courtGrid").innerHTML = courts.map(function (c, ci) {
+          var list = day.filter(function (b) { return b.court === c.id; });
+          var booked = list.filter(function (b) { return b.status === "confirmed"; }).length;
+          var earn = list.reduce(function (s, b) { return s + (b.status === "confirmed" ? b.amount : 0); }, 0);
+          var st = statusOfCourt(list, nowH, isToday);
+
+          var segs = hours.map(function (h, i) {
+            var b = list.find(function (x) { return x.hour === h; });
+            var cls = "seg";
+            if (b) cls += b.status === "confirmed" ? " booked" : " pending";
+            if (isToday && h < nowH) cls += " past";
+            if (isToday && h === nowH) cls += " now";
+            return '<span class="' + cls + '" style="animation-delay:' + (ci * 90 + i * 22) + 'ms;"></span>';
+          }).join("");
+
+          return '<div class="court-card" data-court="' + c.id + '">' +
+            '<div class="cc-media">' +
+            '<img class="cc-photo" src="' + c.img + '" alt="' + c.name + '" loading="lazy" />' +
+            '<div class="cc-shade"></div>' +
+            '<span class="cc-status"><span class="pill ' + st.cls + '">' + st.label + "</span></span>" +
+            '<div class="cc-name">' + c.name + "<small>" + LT_DATA.sports[c.sport].label + " · " + c.note + "</small></div>" +
+            "</div>" +
+            '<div class="cc-body">' +
+            '<div class="tl">' + segs + "</div>" +
+            '<div class="tl-hours"><span>6 AM</span><span>12 PM</span><span>6 PM</span><span>11 PM</span></div>' +
+            '<div class="cc-meta"><span><b>' + booked + "</b> of " + hours.length + " hours booked</span><span><b>" + LT.fmtINR(earn) + "</b> confirmed</span></div>" +
+            "</div></div>";
+        }).join("");
+
+        if (openCourt) paintModal();
+      }
+
+      /* ---------- modal ---------- */
+      var backdrop = document.getElementById("cmBackdrop");
+
+      function paintModal() {
+        var c = LT_DATA.courtsMeta.find(function (x) { return x.id === openCourt; });
+        var day = dayBookings().filter(function (b) { return b.court === c.id; });
+        var isToday = dateInput.value === LT.today();
+        var nowH = new Date().getHours();
+
+        document.getElementById("cmPhoto").src = c.img;
+        document.getElementById("cmName").textContent = c.name;
+        document.getElementById("cmSub").textContent = LT_DATA.sports[c.sport].label + " · " + c.note;
+        document.getElementById("cmDate").textContent =
+          new Date(dateInput.value).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" });
+        var booked = day.filter(function (b) { return b.status === "confirmed"; });
+        document.getElementById("cmSummary").textContent =
+          booked.length + " hour" + (booked.length === 1 ? "" : "s") + " booked · " +
+          LT.fmtINR(booked.reduce(function (s, b) { return s + b.amount; }, 0));
+
+        var rows = [];
+        for (var h = LT_DATA.slotHours.open, i = 0; h < LT_DATA.slotHours.close; h++, i++) {
+          var b = day.find(function (x) { return x.hour === h; });
+          var cls = "sched-row " + (b ? b.status === "confirmed" ? "booked" : "pending" : "free");
+          if (isToday && h < nowH) cls += " past";
+          if (isToday && h === nowH) cls += " now";
+          var who = b
+            ? '<span class="sr-who">' + LT.esc(b.name) + "<small>" + LT.fmtINR(b.amount) + " · " + LT.esc(b.source || "Website") +
+                (b.phone ? " · " + LT.esc(b.phone) : "") + (b.status === "pending" ? " · pending" : "") + "</small></span>"
+            : '<span class="sr-who">Free · ' + LT.fmtINR(LT_SLOTS.rate(h, c.sport)) + "</span>";
+          // one-off booker? staff can reach them to confirm they'll show up
+          var waBtn = b && b.phone
+            ? '<a class="btn btn-icon btn-glass btn-sm" href="https://wa.me/91' + String(b.phone).replace(/\D/g, "").slice(-10) + '" target="_blank" rel="noopener" aria-label="Message ' + LT.esc(b.name) + '" title="Message ' + LT.esc(b.name) + '"><svg viewBox="0 0 24 24" fill="currentColor" style="width:15px;height:15px;"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.08-.3-.15-1.26-.47-2.4-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.44-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.87 1.22 3.07c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.62.71.23 1.36.2 1.87.12.57-.08 1.76-.72 2-1.41.25-.7.25-1.29.17-1.41-.07-.12-.27-.2-.57-.35z"/></svg></a>'
+            : "";
+          // pay-on-exit reminder (walk-ins pay at end of session via UPI link)
+          var payBtn = b && b.status === "confirmed" && b.phone && b.amount > 0
+            ? '<button class="btn btn-icon btn-glass btn-sm" data-pay="' + b.id + '" title="Send UPI pay link" aria-label="Send pay link">₹</button>' : "";
+          var cancelBtn = b
+            ? '<button class="btn btn-icon btn-glass btn-sm" data-cancel="' + b.id + '" title="Cancel booking" aria-label="Cancel booking"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>' : "";
+          var blockBtn = (!b && !(isToday && h < nowH))
+            ? '<button class="btn btn-icon btn-glass btn-sm" data-block="' + h + '" title="Block for maintenance" aria-label="Block">🔧</button>' : "";
+          var act = (b && b.status === "pending"
+            ? '<button class="btn btn-glass btn-sm" data-confirm="' + b.id + '">Confirm</button>' : "") + payBtn + waBtn + cancelBtn + blockBtn;
+          rows.push('<div class="' + cls + '" style="animation-delay:' + i * 28 + 'ms;">' +
+            '<span class="sr-time">' + LT_SLOTS.label(h) + "</span>" +
+            '<span class="sr-bar"><i style="animation-delay:' + (i * 28 + 120) + 'ms;"></i></span>' +
+            who + '<span class="sr-acts">' + act + "</span></div>");
+        }
+        document.getElementById("cmSched").innerHTML = rows.join("");
+      }
+
+      document.getElementById("venueSelect").addEventListener("change", function () {
+        venueFilter = this.value;
+        render();
+        paintChannels(); // channel mix follows the same venue selection
+      });
+
+      function closeCourtModal() {
+        backdrop.classList.remove("open");
+        document.body.classList.remove("lt-noscroll");
+        openCourt = null;
+      }
+      document.getElementById("courtGrid").addEventListener("click", function (e) {
+        var card = e.target.closest(".court-card");
+        if (!card) return;
+        openCourt = card.dataset.court;
+        paintModal();
+        backdrop.classList.add("open");
+        document.body.classList.add("lt-noscroll");
+        document.querySelector(".cm-body").scrollTop = 0;
+      });
+      document.getElementById("cmClose").addEventListener("click", closeCourtModal);
+      backdrop.addEventListener("click", function (e) { if (e.target === backdrop) closeCourtModal(); });
+
+      /* confirm actions (tray + modal) — the DATABASE claims the court
+         atomically; two phones can no longer double-assign a slot */
+      function confirmLocally(id) { // demo seeds only exist in this browser
+        var ov = overrides();
+        ov[id] = "confirmed";
+        var b = allBookings().find(function (x) { return x.id === id; });
+        if (b && !b.court) {
+          var used = allBookings().filter(function (x) { return x.date === b.date && x.hour === b.hour && x.court; })
+            .map(function (x) { return x.court; });
+          var pool = LT_SLOTS.courtsOf(b.sport || LT_SLOTS.venueOf(b.court));
+          for (var ci = 0; ci < pool.length; ci++) {
+            if (used.indexOf(pool[ci].id) === -1) { ov[id + ":court"] = pool[ci].id; break; }
+          }
+        }
+        LT.store.write("booking-status", ov);
+      }
+      document.addEventListener("click", function (e) {
+        var btn = e.target.closest("[data-confirm]");
+        if (!btn) return;
+        var id = btn.dataset.confirm;
+        btn.disabled = true;
+        LT_CLOUD.confirmBooking(id).then(function (res) {
+          var ov = overrides();
+          ov[id] = "confirmed";
+          if (res && res.court) ov[id + ":court"] = res.court;
+          LT.store.write("booking-status", ov);
+          LT.toast("Confirmed" + (res && res.court ? " · " + res.court : "") + " ✓");
+          render();
+        }).catch(function (err) {
+          btn.disabled = false;
+          var m = String(err.message || "");
+          if (/unknown booking/.test(m)) { confirmLocally(id); LT.toast("Booking confirmed ✓"); render(); return; }
+          LT.toast(/all courts taken/.test(m) ? "No free court left for that hour"
+            : /no connection/.test(m) ? "No connection — not confirmed, try again"
+            : "Couldn't confirm: " + m);
+        });
+      });
+
+      /* pay-on-exit: WhatsApp a UPI link for the court fee (walk-ins pay
+         at the end of the session). UPI id rotates like the renewal flow. */
+      function activeUpi() {
+        var b = LT_DATA.billing;
+        return b.upiIds[Math.floor((new Date().getDate() - 1) / b.upiWindowDays) % b.upiIds.length];
+      }
+      document.addEventListener("click", function (e) {
+        var btn = e.target.closest("[data-pay]");
+        if (!btn) return;
+        var b = dayBookings().find(function (x) { return x.id === btn.dataset.pay; });
+        if (!b || !b.phone) return;
+        var upi = activeUpi(), payee = LT_DATA.billing.payee, amt = b.amount;
+        var payBase = location.origin + location.pathname.replace(/[^/]*$/, "") + "pay.html";
+        var payUrl = payBase + "?pa=" + encodeURIComponent(upi) + "&pn=" + encodeURIComponent(payee) +
+          "&am=" + amt + "&tn=" + encodeURIComponent("Court booking · " + b.court);
+        var msg = "Hi " + b.name.split(" ")[0] + "! Thanks for playing at Match Point 🏸\n" +
+          "Court fee for your " + LT_SLOTS.label(b.hour) + " session: ₹" + amt.toLocaleString("en-IN") +
+          "\nPay in one tap 👉 " + payUrl +
+          "\n(or UPI to " + upi + ")" +
+          "\n\nSee you on court again!";
+        window.open("https://wa.me/91" + String(b.phone).replace(/\D/g, "").slice(-10) + "?text=" + encodeURIComponent(msg), "_blank", "noopener");
+        LT.toast("Pay link opened for " + b.name.split(" ")[0] + " ✓");
+      });
+
+      /* ---------- reason sheet: a friendly in-app prompt (no window.prompt,
+         which iOS suppresses and reads as "nothing happened"). One titled
+         sheet with plain copy, quick reason chips + an optional note. ---------- */
+      var rsBackdrop = document.getElementById("rsBackdrop");
+      var rsState = null;
+      function closeReasonSheet() { rsBackdrop.classList.remove("open"); rsState = null; }
+      function openReasonSheet(opts) {
+        rsState = opts;
+        document.getElementById("rsKicker").textContent = opts.kicker || "";
+        document.getElementById("rsTitle").textContent = opts.title || "";
+        document.getElementById("rsSub").textContent = opts.sub || "";
+        var confirmBtn = document.getElementById("rsConfirm");
+        confirmBtn.textContent = opts.confirmLabel || "Confirm";
+        confirmBtn.classList.toggle("danger", !!opts.danger);
+        var note = document.getElementById("rsNote"); note.value = "";
+        document.getElementById("rsChips").innerHTML = (opts.chips || []).map(function (c, i) {
+          return '<button type="button" class="rs-chip' + (i === 0 ? " sel" : "") + '" data-r="' + LT.esc(c) + '">' + LT.esc(c) + "</button>";
+        }).join("");
+        rsBackdrop.classList.add("open");
+      }
+      document.getElementById("rsChips").addEventListener("click", function (e) {
+        var chip = e.target.closest(".rs-chip"); if (!chip) return;
+        this.querySelectorAll(".rs-chip").forEach(function (c) { c.classList.toggle("sel", c === chip); });
+      });
+      function rsReason() {
+        var sel = document.querySelector("#rsChips .rs-chip.sel");
+        var base = sel ? sel.dataset.r : "";
+        var note = document.getElementById("rsNote").value.trim();
+        return note ? (base ? base + " · " + note : note) : base;
+      }
+      document.getElementById("rsClose").addEventListener("click", closeReasonSheet);
+      document.getElementById("rsKeep").addEventListener("click", closeReasonSheet);
+      rsBackdrop.addEventListener("click", function (e) { if (e.target === rsBackdrop) closeReasonSheet(); });
+      document.getElementById("rsConfirm").addEventListener("click", function () {
+        if (!rsState) return;
+        var fn = rsState.onConfirm, reason = rsReason();
+        closeReasonSheet();
+        if (fn) fn(reason);
+      });
+
+      /* cancel a booking (rain / no-show / double-entry) — frees the slot */
+      function doCancel(id, reason, when) {
+        LT_CLOUD.cancelBooking(id, reason || null).then(function () {
+          var ov = overrides(); ov[id] = "cancelled"; LT.store.write("booking-status", ov);
+          var local = LT.store.read("bookings", []).filter(function (x) { return x.id !== id; });
+          LT.store.write("bookings", local);
+          LT.toast("✓ Cancelled — " + when + " is free again");
+          render(); paintChannels();
+        }).catch(function (err) {
+          var m = String(err.message || "");
+          if (/unknown booking/.test(m)) {
+            var ov2 = overrides(); ov2[id] = "cancelled"; LT.store.write("booking-status", ov2);
+            LT.toast("✓ Cancelled — " + when + " is free again"); render(); return;
+          }
+          LT.toast(/no connection/.test(m) ? "No connection — not cancelled, try again" : "Couldn't cancel: " + m);
+        });
+      }
+      document.addEventListener("click", function (e) {
+        var btn = e.target.closest("[data-cancel]");
+        if (!btn) return;
+        var id = btn.dataset.cancel;
+        var b = dayBookings().find(function (x) { return x.id === id; });
+        var when = (LT_DATA.courtsMeta.find(function (x) { return x.id === openCourt; }) || {}).name;
+        when = (when ? when + " · " : "") + (b ? LT_SLOTS.label(b.hour) : "this slot");
+        openReasonSheet({
+          kicker: "Cancel booking", title: "Cancel this booking?",
+          sub: "Frees " + when + " across every channel. It won't refund a Playo/Hudle booking — do that in their app.",
+          chips: ["Rain", "No-show", "Double-booked", "Customer request"],
+          confirmLabel: "Cancel booking", danger: true,
+          onConfirm: function (reason) { doCancel(id, reason, when); },
+        });
+      });
+
+      /* block a court-hour for maintenance / rain closure */
+      function doBlock(c, hour, reason) {
+        var when = c.name + " · " + LT_SLOTS.label(hour);
+        LT_CLOUD.blockMaintenance(c.sport, dateInput.value, hour, c.id, reason || "Maintenance").then(function () {
+          LT.toast("✓ Blocked — " + when + " held (" + (reason || "Maintenance") + ")");
+          render(); paintChannels();
+        }).catch(function (err) {
+          LT.toast(/no connection/.test(String(err.message)) ? "No connection — not blocked, try again" : "Couldn't block: " + err.message);
+        });
+      }
+      document.addEventListener("click", function (e) {
+        var btn = e.target.closest("[data-block]");
+        if (!btn) return;
+        var c = LT_DATA.courtsMeta.find(function (x) { return x.id === openCourt; });
+        if (!c) return; // modal already closed — ignore a stale delegated click
+        var hour = +btn.dataset.block;
+        openReasonSheet({
+          kicker: "Block court", title: "Block " + c.name + "?",
+          sub: "Holds " + LT_SLOTS.label(hour) + " so nobody can book it — on your site and every channel.",
+          chips: ["Maintenance", "Net / surface repair", "Rain", "Cleaning", "Lighting"],
+          confirmLabel: "Block slot", danger: false,
+          onConfirm: function (reason) { doBlock(c, hour, reason || "Maintenance"); },
+        });
+      });
+
+      /* ---------- manual add booking ---------- */
+      var abBackdrop = document.getElementById("abBackdrop");
+      function buildSourceSelect() {
+        document.getElementById("abSource").innerHTML = CHANNELS
+          .map(function (c) { return "<option" + (c.id === "Walk-in" ? " selected" : "") + ">" + c.id + "</option>"; }).join("");
+      }
+      buildSourceSelect();
+      var abHourSel = document.getElementById("abHour");
+      abHourSel.innerHTML = LT_SLOTS.hours
+        .map(function (h) { return '<option value="' + h + '">' + LT_SLOTS.label(h) + (h >= LT_DATA.rates.peakFrom ? " · peak" : "") + "</option>"; }).join("");
+      var courtSel = document.getElementById("abCourt");
+      var abVenue = document.getElementById("abVenue");
+      function fillCourtSel() {
+        courtSel.innerHTML = '<option value="">Auto-assign</option>' +
+          LT_SLOTS.courtsOf(abVenue.value).map(function (c) {
+            return '<option value="' + c.id + '">' + c.name + "</option>";
+          }).join("");
+      }
+      // live rate preview — venue + hour decide the price
+      function paintAbRate() {
+        var h = +abHourSel.value, v = abVenue.value;
+        document.getElementById("abRate").textContent =
+          LT_DATA.sports[v].label + " · " + LT.fmtINR(LT_SLOTS.rate(h, v)) +
+          (h >= LT_DATA.rates.peakFrom ? " · peak rate" : " · off-peak rate");
+      }
+      abVenue.addEventListener("change", function () { fillCourtSel(); paintAbRate(); });
+      abHourSel.addEventListener("change", paintAbRate);
+      fillCourtSel();
+      paintAbRate();
+      document.getElementById("addBkBtn").addEventListener("click", function () {
+        document.getElementById("abDate").value = dateInput.value;
+        // "Playing at" defaults to the venue the board is looking at
+        if (venueFilter !== "all") { abVenue.value = venueFilter; fillCourtSel(); }
+        paintAbRate();
+        abBackdrop.classList.add("open");
+      });
+      document.getElementById("abClose").addEventListener("click", function () { abBackdrop.classList.remove("open"); });
+      abBackdrop.addEventListener("click", function (e) { if (e.target === abBackdrop) abBackdrop.classList.remove("open"); });
+
+      document.getElementById("abForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        var d = new FormData(this);
+        var msg = document.getElementById("abMsg");
+        if (!String(d.get("name") || "").trim()) { msg.textContent = "Please enter who booked."; msg.className = "form-msg error"; return; }
+        var hour = +d.get("hour"), date = d.get("date") || dateInput.value;
+        var venue = d.get("venue") || "manikonda";
+        var form = this;
+        // the RPC prices the slot and claims a court atomically server-side
+        LT_CLOUD.recordBooking({
+          name: d.get("name"), phone: d.get("phone") || "",
+          sport: venue, date: date, hour: hour,
+          source: d.get("source"), court: d.get("court") || null,
+        }).then(function (res) {
+          var list = LT.store.read("bookings", []);
+          list.unshift({
+            id: res.id, name: d.get("name"), phone: d.get("phone") || "",
+            court: res.court, sport: venue, date: date, hour: hour,
+            amount: LT_SLOTS.rate(hour, venue), status: "confirmed",
+            source: d.get("source"),
+          });
+          LT.store.write("bookings", list);
+          LT_CLOUD.track("staff_booking_added", { source: d.get("source"), venue: venue });
+          abBackdrop.classList.remove("open");
+          form.reset();
+          var cn = LT_DATA.courtsMeta.find(function (x) { return x.id === res.court; });
+          LT.toast("Booking saved · " + (cn ? cn.name : res.court) + " ✓");
+          dateInput.value = date;
+          render();
+          paintChannels();
+        }).catch(function (err) {
+          var m = String(err.message || "");
+          msg.textContent = /all courts taken/.test(m) ? "All " + LT_DATA.sports[venue].short + " courts are taken for that hour."
+            : /court taken/.test(m) ? "That court is already booked for that hour — pick another or leave it on Auto-assign."
+            : /no connection/.test(m) ? "No connection — booking NOT saved. Try again."
+            : "Couldn't save: " + m;
+          msg.className = "form-msg error";
+        });
+      });
+
+      dateInput.addEventListener("change", render);
+      render();
+      paintChannels();
+    })();
+  </script>
+</body>
+</html>

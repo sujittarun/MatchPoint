@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#050806" />
+  <title>Match Point — Rally/21 Concept</title>
+  <meta name="description" content="A kinetic, interactive concept for Match Point Badminton Academy." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/concept-pulse.css?v=1" />
+</head>
+<body>
+  <canvas id="shuttleField" aria-hidden="true"></canvas>
+  <div class="noise" aria-hidden="true"></div>
+  <div class="cursor-orb" id="cursorOrb" aria-hidden="true"></div>
+
+  <header class="p-nav">
+    <a class="p-logo" href="index.html"><span>MP</span><strong>Match Point</strong></a>
+    <div class="p-nav-center"><i></i><span>Manikonda court signal</span><b>Live</b></div>
+    <nav><a href="#system">System</a><a href="#path">Pathway</a><a href="login.html">Academy OS</a><a class="p-nav-cta" href="booking.html">Book / 01</a></nav>
+  </header>
+
+  <main>
+    <section class="p-hero" id="top">
+      <div class="p-court" aria-hidden="true"><span class="court-net"></span><span class="court-mid"></span><span class="court-left"></span><span class="court-right"></span></div>
+      <div class="p-hero-copy">
+        <div class="p-code"><span>MP/ALPKR/08</span><span>TRAINING SIGNAL ACTIVE</span></div>
+        <h1><span>Every</span><span>point</span><span>changes</span><span>you.</span></h1>
+        <p>Move faster. Read earlier. Finish stronger. Match Point turns every rally into a repeatable advantage.</p>
+        <div class="p-actions"><a class="p-primary" href="admission.html">Enter the pathway <b>↗</b></a><a class="p-text" href="booking.html">Find tonight’s court <span>→</span></a></div>
+      </div>
+
+      <div class="p-impact" id="impact" aria-hidden="true">
+        <span class="impact-ring r1"></span><span class="impact-ring r2"></span><span class="impact-ring r3"></span>
+        <div class="shuttle-core"><i></i><i></i><i></i><i></i><i></i><i></i><b></b></div>
+      </div>
+
+      <aside class="p-score">
+        <div class="score-top"><span>Live session</span><i></i></div>
+        <div class="score-main"><strong id="rallyCount">21</strong><span>shot<br />rally</span></div>
+        <div class="score-line"><span>Intensity</span><b><i></i></b><em>92%</em></div>
+        <div class="score-line"><span>Recovery</span><b><i style="width:78%"></i></b><em>0.74s</em></div>
+      </aside>
+
+      <div class="p-scroll"><span>Scroll to read the game</span><i></i></div>
+    </section>
+
+    <section class="p-manifesto" id="system">
+      <div class="p-rail"><span>01</span><i></i><b>THE MATCH POINT SYSTEM</b></div>
+      <div class="p-manifesto-copy reveal-p">
+        <p class="p-overline">Badminton is a decision made at 400 km/h.</p>
+        <h2>We slow the game down—<em>so you can speed it up.</em></h2>
+      </div>
+      <div class="p-data-grid">
+        <article class="p-data reveal-p"><span>01 / READ</span><strong data-count="360">000</strong><small>degrees of court awareness</small><div class="data-wave"><i></i><i></i><i></i><i></i><i></i><i></i></div></article>
+        <article class="p-data reveal-p"><span>02 / MOVE</span><strong data-count="74">00</strong><small>hundredths to reset your base</small><div class="foot-map"><i></i><i></i><i></i><i></i><i></i></div></article>
+        <article class="p-data reveal-p"><span>03 / STRIKE</span><strong data-count="21">00</strong><small>points. One match. No drift.</small><div class="strike-line"></div></article>
+      </div>
+    </section>
+
+    <section class="p-film">
+      <div class="p-film-sticky">
+        <div class="p-film-media"><img src="assets/img/matchpoint-hero.png" alt="Player attacking the shuttle at Match Point" /></div>
+        <div class="p-film-wash"></div>
+        <div class="film-word"><span>Built</span><span>under</span><span>pressure.</span></div>
+        <div class="film-caption"><span>Founder-led coaching</span><strong>Venu Muppala</strong><p>National-level competition experience, translated into sharper habits on every court.</p></div>
+        <div class="film-index">MP — 2008/26</div>
+      </div>
+    </section>
+
+    <section class="p-path" id="path">
+      <div class="p-rail"><span>02</span><i></i><b>YOUR PLAYER PATHWAY</b></div>
+      <div class="p-path-head reveal-p"><h2>Choose your<br />next version.</h2><p>Four training environments. One continuous progression. Start where you are—move when the work says you’re ready.</p></div>
+      <div class="p-path-list">
+        <a href="admission.html?program=found" class="path-row reveal-p"><span>01</span><h3>Foundation</h3><p>Movement before power. Contact before speed.</p><b>START / AGES 6+</b><i>↗</i></a>
+        <a href="admission.html?program=inter" class="path-row reveal-p"><span>02</span><h3>Intermediate</h3><p>Consistency becomes control. Control becomes intent.</p><b>BUILD / MATCH PLAY</b><i>↗</i></a>
+        <a href="admission.html?program=perf" class="path-row reveal-p"><span>03</span><h3>Performance</h3><p>Pressure, analysis and tournament-grade repetition.</p><b>COMPETE / ADVANCED</b><i>↗</i></a>
+        <a href="admission.html?program=private" class="path-row reveal-p"><span>04</span><h3>Personal</h3><p>Your game isolated, decoded and rebuilt one-on-one.</p><b>FOCUS / APPOINTMENT</b><i>↗</i></a>
+      </div>
+    </section>
+
+    <section class="p-slots">
+      <div class="slots-title"><span>TONIGHT / MANIKONDA</span><h2>The court is<br />waiting.</h2></div>
+      <div class="slot-orbit" aria-hidden="true"><div class="orbit-ball"></div><i></i><i></i><i></i></div>
+      <div class="slot-times"><a href="booking.html"><span>18:00</span><b>2 courts</b></a><a href="booking.html"><span>20:00</span><b>1 court</b></a><a href="booking.html"><span>22:00</span><b>3 courts</b></a></div>
+      <a class="p-book-big" href="booking.html"><span>Book the next point</span><b>↗</b></a>
+    </section>
+  </main>
+
+  <footer class="p-footer"><a class="p-logo" href="#top"><span>MP</span><strong>Match Point</strong></a><p>Alkapur Township · Manikonda · Hyderabad</p><div><a href="concept-orbit.html">View Court OS concept →</a><a href="index.html">Original concept</a></div></footer>
+  <script src="assets/js/concept-pulse.js?v=1"></script>
+</body>
+</html>

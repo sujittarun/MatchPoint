@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d0c1a" />
+  <title>Dashboard — Match Point</title>
+  <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg?v=2" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/glass.css?v=18" />
+  <script>document.documentElement.dataset.theme = localStorage.getItem("mp-theme") || "dark"; document.documentElement.classList.add("lt-js");</script>
+  <style>
+    /* 2x2 KPIs on phones — less scrolling to reach the charts */
+    @media (max-width: 699px) {
+      .lt-grid.cols-4.dash-kpis { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .dash-kpis .kpi { padding: 12px 14px; }
+      .dash-kpis .stat-value { font-size: 22px; }
+      .dash-kpis .stat-copy { font-size: 11px; }
+      .dash-kpis .delta { font-size: 10.5px; }
+    }
+    .dev-pulse { display: grid; grid-template-columns: 1.15fr .85fr; gap: 22px; }
+    .dev-metrics { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-top: 16px; }
+    .dev-metric { padding: 14px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--tile-bg); }
+    .dev-metric span { display:block; font-size:10px; color:var(--ink-low); }
+    .dev-metric strong { display:block; margin-top:5px; font:800 24px/1 var(--font-display); color:var(--ink-hi); }
+    .dev-metric small { display:block; margin-top:6px; font-size:9px; color:var(--ink-faint); }
+    .dev-metric.good strong { color:var(--tx-green); }.dev-metric.warn strong { color:var(--tx-red); }
+    .dev-watch { border-left:1px solid var(--line); padding-left:22px; }
+    .dev-person { display:flex; align-items:center; gap:9px; padding:9px 0; border-bottom:1px solid var(--line); }
+    .dev-person:last-child { border-bottom:0; }.dev-person .av { width:30px;height:30px;display:grid;place-items:center;border-radius:50%;background:var(--gold-grad);color:#1c1503;font-size:9px;font-weight:800; }
+    .dev-person div { min-width:0;flex:1; }.dev-person strong { display:block;font-size:11px;color:var(--ink-hi); }.dev-person small { display:block;margin-top:2px;font-size:9px;color:var(--ink-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+    @media(max-width:699px){.dev-pulse{grid-template-columns:1fr}.dev-watch{border-left:0;border-top:1px solid var(--line);padding:16px 0 0}.dev-metrics{grid-template-columns:1fr 1fr}.dev-metric{padding:10px}.dev-metric strong{font-size:20px}}
+  </style>
+</head>
+<body>
+  <div class="lt-bg" aria-hidden="true"></div>
+
+  <main class="lt-page">
+    <div class="card-head" style="margin-bottom: 0;">
+      <div>
+        <div class="kicker">Dashboard</div>
+        <h2 id="greet">Good morning 🏸</h2>
+        <div class="sub" id="dateLine"></div>
+      </div>
+      <a class="btn btn-primary btn-sm" href="bookings.html">Today's bookings</a>
+    </div>
+
+    <!-- KPIs -->
+    <div class="lt-grid cols-4 dash-kpis">
+      <div class="glass glass-hover kpi reveal">
+        <span class="stat-copy">Active members</span>
+        <span class="stat-value" id="kpiMembers">—</span>
+        <span class="delta up" id="kpiMembersSub"></span>
+      </div>
+      <div class="glass glass-hover kpi reveal d1">
+        <span class="stat-copy">Court bookings today</span>
+        <span class="stat-value" id="kpiBookings">—</span>
+        <span class="delta" id="kpiBookingsSub"></span>
+      </div>
+      <div class="glass glass-hover kpi reveal d2">
+        <span class="stat-copy">Renewals due</span>
+        <span class="stat-value" id="kpiDue">—</span>
+        <span class="delta down" id="kpiDueSub"></span>
+      </div>
+      <div class="glass glass-hover kpi reveal d3">
+        <span class="stat-copy" id="kpiRevLabel">Revenue</span>
+        <span class="stat-value" id="kpiRev">—</span>
+        <span class="delta up" id="kpiRevSub"></span>
+      </div>
+    </div>
+
+    <section class="glass glass-card dev-pulse reveal">
+      <div><div class="card-head"><div><div class="kicker">Player development</div><h2>Pathway pulse</h2></div><a class="btn btn-primary btn-sm" href="progress.html">Open progress</a></div><div class="sub">Skill sign-offs, level movement and today’s training presence.</div><div class="dev-metrics"><div class="dev-metric good"><span>Fast learners</span><strong id="devFast">—</strong><small>≥35% above pace</small></div><div class="dev-metric good"><span>Promotion review</span><strong id="devReady">—</strong><small>required skills complete</small></div><div class="dev-metric warn"><span>Needs attention</span><strong id="devStalled">—</strong><small>plateau, pause or managed load</small></div><div class="dev-metric"><span>Attendance today</span><strong id="devAttendance">—</strong><small id="devAttendanceSub">not marked yet</small></div></div></div>
+      <div class="dev-watch"><div class="card-head"><div><div class="kicker">Coach watchlist</div><h2 style="font-size:16px">Next actions</h2></div></div><div id="devWatch"></div></div>
+    </section>
+
+    <!-- revenue chart + collection donut -->
+    <div class="dash-main">
+      <div class="glass glass-card chart-card reveal">
+        <div class="card-head"><div><div class="kicker">Revenue</div><h2>Monthly collections</h2></div><span class="pill gold">Last 6 months</span></div>
+        <div class="chart-host" id="revChart"></div>
+      </div>
+      <div class="glass glass-card chart-card reveal d1">
+        <div class="card-head"><div><div class="kicker">Memberships</div><h2>Renewal status</h2></div></div>
+        <div class="donut-wrap">
+          <div class="donut">
+            <svg viewBox="0 0 120 120">
+              <defs><linearGradient id="ltDonutGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#e2ff86"/><stop offset="1" stop-color="#a9e717"/>
+              </linearGradient></defs>
+              <circle class="ring track" cx="60" cy="60" r="50"/>
+              <circle class="ring val" cx="60" cy="60" r="50" id="donutVal"/>
+            </svg>
+            <div class="center"><div><div class="pct" id="donutPct">0%</div><div class="lbl">paid up</div></div></div>
+          </div>
+          <div class="donut-legend" id="donutLegend"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- activity + attention -->
+    <div class="dash-bottom">
+      <div class="glass glass-card reveal">
+        <div class="card-head"><div><div class="kicker">Latest</div><h2>Recent activity</h2></div></div>
+        <div class="feed" id="feed"></div>
+      </div>
+      <div class="glass glass-card reveal d1">
+        <div class="card-head"><div><div class="kicker">Needs attention</div><h2>Renewals due</h2></div><a class="btn btn-glass btn-sm" href="fees.html">Open finance</a></div>
+        <div class="feed" id="dueList"></div>
+      </div>
+    </div>
+  </main>
+
+  <script src="assets/js/core.js?v=8"></script>
+  <script src="assets/js/data.js?v=5"></script>
+  <script src="assets/js/progress-data.js?v=3"></script>
+  <script>
+    LT.auth.require();
+    LT.managerShell("dashboard.html");
+
+    (function () {
+      var now = new Date();
+      var hrs = now.getHours();
+      document.getElementById("greet").textContent = (hrs < 12 ? "Good morning" : hrs < 17 ? "Good afternoon" : "Good evening") + " 🏸";
+      // date line notes the venue scope so the numbers read unambiguously
+      var scope = LT.venue.get();
+      document.getElementById("dateLine").textContent =
+        now.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) +
+        (scope === "all" ? "" : " · " + LT.venue.label());
+      document.getElementById("kpiRevLabel").textContent = "Revenue · " + now.toLocaleDateString("en-IN", { month: "long" });
+      // finance series for the current venue scope (per-venue sums to combined)
+      var fin = LT_DATA.financeFor(scope);
+      var rev = fin.map(function (f) { return { m: f.m, v: f.rev }; });
+      LT.countUp(document.getElementById("kpiRev"), rev[rev.length - 1].v, { prefix: "₹", suffix: "k" });
+      document.getElementById("kpiRevSub").textContent = "Month to date · " + rev[rev.length - 2].m + " closed at ₹" + rev[rev.length - 2].v + "k";
+
+      // members KPIs (scoped to the selected venue)
+      var members = LT.venue.filter(LT_DATA.members, function (m) { return m.venue; });
+      var due = members.filter(function (m) { return m.status === "due"; });
+      LT.countUp(document.getElementById("kpiMembers"), members.length);
+      document.getElementById("kpiMembersSub").textContent = "▲ " +
+        members.filter(function (m) { return (Date.now() - new Date(m.joined)) / 864e5 < 45; }).length + " joined recently";
+      document.getElementById("kpiDue").textContent = due.length;
+      document.getElementById("kpiDueSub").textContent = "▼ worth " + LT.fmtINR(due.length * LT_DATA.plans[0].amount);
+
+      // Player-development pulse: staff-only operational insight.
+      var dev = LTP.roster();
+      document.getElementById("devFast").textContent = dev.filter(function (x) { return x.signal === "fast"; }).length;
+      document.getElementById("devReady").textContent = dev.filter(function (x) { return x.signal === "ready"; }).length;
+      document.getElementById("devStalled").textContent = dev.filter(function (x) { return x.signal === "stalled" || x.signal === "managed"; }).length;
+      var attMarks = LT.store.read("att-" + LT.today(), []), attTotal = LT_ROSTER().length;
+      document.getElementById("devAttendance").textContent = attMarks.length ? Math.round(attMarks.length / Math.max(attTotal, 1) * 100) + "%" : "—";
+      document.getElementById("devAttendanceSub").textContent = attMarks.length + "/" + attTotal + (attMarks.length ? " checked in" : " · not marked yet");
+      document.getElementById("devWatch").innerHTML = dev.filter(function (x) { return x.signal === "ready" || x.signal === "stalled" || x.signal === "managed"; }).slice(0, 4).map(function (x) {
+        var managed = x.signal === "managed";
+        return '<a class="dev-person" href="progress.html?player=' + encodeURIComponent(x.member.id) + '"><span class="av">' + LT.initials(x.member.name) + '</span><div><strong>' + LT.esc(x.member.name) + '</strong><small>' + x.level.name + ' · ' + (x.signal === "ready" ? "promotion review" : managed ? x.profile.trainingStatus.replace(/-/g, " ") : x.days + " days at level") + '</small></div><span class="pill ' + (x.signal === "ready" ? "green" : "red") + '">' + (x.signal === "ready" ? "Ready" : managed ? "Managed" : "Review") + '</span></a>';
+      }).join("");
+
+      // bookings KPI (seed + site requests) — bookings carry the venue key
+      var todays = LT.venue.filter(LT.store.read("bookings", []).concat(LT_DATA.bookings))
+        .filter(function (b) { return b.date === LT.today(); });
+      var pending = todays.filter(function (b) { return b.status === "pending"; }).length;
+      LT.countUp(document.getElementById("kpiBookings"), todays.length);
+      var bs = document.getElementById("kpiBookingsSub");
+      bs.textContent = pending ? pending + " pending confirmation" : "All confirmed";
+      bs.className = "delta " + (pending ? "down" : "up");
+
+      // Renewal donut
+      var pct = Math.round(((members.length - due.length) / members.length) * 100);
+      var C = 2 * Math.PI * 50;
+      var ring = document.getElementById("donutVal");
+      ring.style.strokeDasharray = C;
+      ring.style.strokeDashoffset = C;
+      requestAnimationFrame(function () { requestAnimationFrame(function () { ring.style.strokeDashoffset = C * (1 - pct / 100); }); });
+      LT.countUp(document.getElementById("donutPct"), pct, { suffix: "%" });
+      document.getElementById("donutLegend").innerHTML =
+        '<span class="lg"><span class="sw" style="background:var(--gold-400);"></span>' + (members.length - due.length) + " paid up</span>" +
+        '<span class="lg"><span class="sw" style="background:var(--tile-border);"></span>' + due.length + " due</span>";
+
+      // Revenue area chart (scoped finance series)
+      var data = rev, W = 560, H = 240, P = 28;
+      var max = Math.max.apply(null, data.map(function (d) { return d.v; })) * 1.15;
+      function x(i) { return P + (i * (W - 2 * P)) / (data.length - 1); }
+      function y(v) { return H - P - (v / max) * (H - 2 * P); }
+      var line = data.map(function (d, i) { return (i ? "L" : "M") + x(i) + " " + y(d.v); }).join(" ");
+      var area = line + " L" + x(data.length - 1) + " " + (H - P) + " L" + x(0) + " " + (H - P) + " Z";
+      var grid = [0.25, 0.5, 0.75, 1].map(function (g) {
+        var gy = y(max * g * 0.87);
+        return '<line x1="' + P + '" y1="' + gy + '" x2="' + (W - P) + '" y2="' + gy + '"/>';
+      }).join("");
+      var labels = data.map(function (d, i) { return '<text class="chart-xlabel" x="' + x(i) + '" y="' + (H - 8) + '" text-anchor="middle">' + d.m + "</text>"; }).join("");
+      var dots = data.map(function (d, i) { return '<circle cx="' + x(i) + '" cy="' + y(d.v) + '" r="3.6" fill="#c9ff35" stroke="rgba(255,255,255,.8)" stroke-width="1.6"/>'; }).join("");
+      document.getElementById("revChart").innerHTML =
+        '<svg viewBox="0 0 ' + W + " " + H + '">' +
+        '<defs><linearGradient id="ltLineGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e2ff86"/><stop offset="1" stop-color="#a9e717"/></linearGradient>' +
+        '<linearGradient id="ltAreaGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(255,156,51,.30)"/><stop offset="1" stop-color="rgba(255,156,51,0)"/></linearGradient></defs>' +
+        '<g class="chart-grid">' + grid + "</g>" +
+        '<path class="area-fill in" d="' + area + '" fill="url(#ltAreaGrad)"/>' +
+        '<path class="area-line" d="' + line + '"/>' + dots + labels + "</svg>";
+
+      // Activity feed
+      var icons = {
+        join: '<path d="M15 14c-2.7 0-8 1.34-8 4v2h16v-2c0-2.66-5.3-4-8-4zm0-2a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM6 10V7H4v3H1v2h3v3h2v-3h3v-2z"/>',
+        pay: '<path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1H6.32c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/>',
+        trophy: '<path d="M19 5h-2V3H7v2H5a2 2 0 0 0-2 2v1a5 5 0 0 0 4.5 4.97A5.5 5.5 0 0 0 11 15.9V19H7v2h10v-2h-4v-3.1a5.5 5.5 0 0 0 3.5-2.93A5 5 0 0 0 21 8V7a2 2 0 0 0-2-2z"/>',
+        court: '<path d="M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V10h14zM5 8V6h14v2z"/>',
+      };
+      document.getElementById("feed").innerHTML = LT_DATA.activity.map(function (a) {
+        return '<div class="feed-item"><span class="fi-ic"><svg viewBox="0 0 24 24" fill="currentColor">' + icons[a.icon] + "</svg></span>" +
+          '<div><div class="fi-body">' + a.text + '</div><div class="fi-time">' + a.time + "</div></div></div>";
+      }).join("");
+
+      // Due list
+      document.getElementById("dueList").innerHTML = due.map(function (m) {
+        var p = LT_DATA.programs.find(function (x) { return x.id === m.program; });
+        return '<div class="feed-item"><span class="fi-ic" style="color:var(--tx-red);">₹</span>' +
+          '<div class="grow"><div class="fi-body"><strong>' + m.name + "</strong> · " + p.name + "</div>" +
+          '<div class="fi-time">Valid till ' + new Date(m.validTill).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) + "</div></div>" +
+          '<span class="pill red">Due</span></div>';
+      }).join("") || '<div class="empty-state">Everyone is paid up. 🏸</div>';
+    })();
+  </script>
+</body>
+</html>

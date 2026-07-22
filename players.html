@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d0c1a" />
+  <title>Members — Match Point</title>
+  <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg?v=2" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/glass.css?v=18" />
+  <script>document.documentElement.dataset.theme = localStorage.getItem("mp-theme") || "dark"; document.documentElement.classList.add("lt-js");</script>
+  <style>
+    .toolbar { display: flex; gap: var(--gap-2); flex-wrap: wrap; align-items: center; }
+    .toolbar input[type="search"] { max-width: 280px; }
+    .pl-name { display: flex; align-items: center; gap: 10px; }
+    .pl-name .av { width: 32px; height: 32px; flex: none; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; color: #1c1503; background: var(--gold-grad); }
+    .app-tray { display: flex; flex-direction: column; gap: 8px; }
+    .app-row { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; padding: 10px 14px;
+      border: 1px solid rgba(255, 156, 51, 0.35); background: rgba(255, 156, 51, 0.07); border-radius: var(--r-md); }
+    .app-row .aq-who { font-weight: 700; color: var(--ink-hi); font-size: 13.5px; }
+    .app-row .aq-what { font-size: 12.5px; color: var(--ink-mid); }
+    .app-row .aq-when { font-size: 11.5px; color: var(--ink-faint); margin-left: auto; }
+    .app-row .aq-call { font-size: 12.5px; font-weight: 700; color: var(--tx-gold); }
+    .bstat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    @media (max-width: 620px) { .bstat-row { grid-template-columns: 1fr 1fr; } }
+    .bstat { border: 1px solid var(--tile-border); background: var(--tile-bg); border-radius: var(--r-md); padding: 12px 14px; }
+    .bstat .k { font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-low); }
+    .bstat .v { display: block; font-family: var(--font-display); font-weight: 800; font-size: 20px; color: var(--ink-hi); margin-top: 3px; }
+    .bstat .s { font-size: 11px; color: var(--ink-faint); }
+    .we-bar { display: flex; height: 6px; border-radius: 3px; overflow: hidden; margin-top: 6px; background: var(--line); }
+    .we-bar i { display: block; height: 100%; }
+    /* booking history: keep each row on one clean line and scroll the table
+       sideways rather than wrapping cells; clip corners to the rounded card */
+    .hist-wrap { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; border: 1px solid var(--line); }
+    .hist-table { min-width: 540px; }
+    .hist-table th, .hist-table td { white-space: nowrap; vertical-align: middle; }
+    .hist-table td .faint { white-space: nowrap; }
+    /* renewal reminders (WhatsApp) — lives with Members, not Finance */
+    .rem-list { display: flex; flex-direction: column; gap: 8px; }
+    .rem-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: var(--r-md);
+      border: 1px solid rgba(255, 107, 107, 0.32); background: rgba(255, 107, 107, 0.07); }
+    :root[data-theme="light"] .rem-item { background: rgba(194, 56, 63, 0.07); }
+    .rem-item.done { border-color: rgba(52, 211, 153, 0.4); background: rgba(52, 211, 153, 0.08); }
+    .rem-item .av { width: 32px; height: 32px; flex: none; border-radius: 50%; display: grid; place-items: center;
+      font-size: 12px; font-weight: 700; color: #1c1503; background: var(--gold-grad); }
+    .rem-item .rm-body { flex: 1; min-width: 0; }
+    .rem-item .rm-name { display: block; font-weight: 700; font-size: 14px; color: var(--ink-hi); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rem-item .rm-sub { display: block; font-size: 12px; margin-top: 1px; }
+    .rem-item .rm-sub .late { color: var(--tx-red); font-weight: 700; }
+    .rem-item .rm-sub .soon { color: var(--tx-gold); font-weight: 700; }
+    .rem-item .rm-sub .sent { color: var(--tx-green); font-weight: 600; }
+    .rem-empty { text-align: center; color: var(--ink-low); font-size: 13.5px; padding: var(--gap-3) var(--gap-2); }
+    .rem-item.upcoming { border-color: rgba(255, 156, 51, 0.35); background: rgba(255, 156, 51, 0.07); }
+    .rem-item .wa { flex: none; }
+    .rem-upi { font-size: 11px; margin: -2px 0 10px; color: var(--ink-faint); }
+    .rem-upi b { color: var(--tx-gold); font-weight: 700; }
+    /* member detail */
+    .md-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 2px 0 14px; }
+    .md-facts { display: flex; flex-direction: column; margin-bottom: 4px; }
+    .md-facts .f { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+    .md-facts .f:last-child { border-bottom: none; }
+    .md-facts .f .k { color: var(--ink-low); }
+    .md-facts .f .v { font-weight: 700; color: var(--ink-hi); text-align: right; }
+    .md-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+    .md-actions .btn { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    tr.mem-row { cursor: pointer; }
+    /* reminder history timeline (member detail) */
+    .md-tl-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 16px 0 8px; }
+    .md-tl-head h3 { font-size: 13px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-low); }
+    .md-tl-head .n { font-size: 11.5px; color: var(--ink-faint); }
+    .md-tl { position: relative; margin-left: 4px; padding-left: 20px; max-height: 190px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .md-tl::before { content: ""; position: absolute; left: 4px; top: 6px; bottom: 6px; width: 2px; background: var(--line); }
+    .md-tl-item { position: relative; padding: 5px 0 11px; }
+    .md-tl-item:last-child { padding-bottom: 2px; }
+    .md-tl-item::before { content: ""; position: absolute; left: -20px; top: 6px; width: 9px; height: 9px; border-radius: 50%;
+      background: var(--tx-green); border: 2px solid var(--glass-bg); box-sizing: content-box; }
+    .md-tl-item.faded::before { background: var(--ink-faint); }
+    .md-tl-when { font-size: 13px; font-weight: 650; color: var(--ink-hi); }
+    .md-tl-sub { font-size: 11.5px; color: var(--ink-low); margin-top: 1px; }
+    .md-tl-empty { font-size: 12.5px; color: var(--ink-low); padding: 4px 0 2px; }
+    .rem-item.clickable { cursor: pointer; }
+    .rem-item.clickable .rm-body { min-width: 0; }
+  </style>
+</head>
+<body>
+  <div class="lt-bg" aria-hidden="true"></div>
+
+  <main class="lt-page">
+    <div class="card-head" style="margin-bottom: 0;">
+      <div>
+        <div class="kicker">Roster</div>
+        <h2>Members</h2>
+        <div class="sub" id="countLine"></div>
+      </div>
+      <button class="btn btn-primary btn-sm" id="addBtn">+ Add member</button>
+    </div>
+
+    <div class="glass glass-card tight">
+      <div class="toolbar">
+        <input type="search" id="q" placeholder="Search members…" />
+        <span class="lt-filter"><select id="programSelect" aria-label="Filter by program"></select></span>
+      </div>
+    </div>
+
+    <!-- coaching applications from the website (cloud) -->
+    <div class="glass glass-card tight hide" id="appCard">
+      <div class="card-head" style="margin-bottom: 10px;">
+        <div><div class="kicker">Enquiries</div><h2 style="font-size:16px;">New coaching applications</h2></div>
+      </div>
+      <div class="app-tray" id="appTray"></div>
+    </div>
+
+    <!-- renewal reminders (WhatsApp) — membership follow-ups belong with Members -->
+    <div class="glass glass-card tight hide" id="remCard">
+      <div class="card-head" style="margin-bottom: 10px;">
+        <div><div class="kicker">Renewals</div><h2 style="font-size:16px;">WhatsApp reminders</h2></div>
+        <button class="btn btn-glass btn-sm" id="remindAll">Send next ›</button>
+      </div>
+      <div class="rem-upi faint" id="remUpi"></div>
+      <div class="rem-list" id="remList"></div>
+    </div>
+
+    <div class="glass">
+      <div class="table-wrap">
+        <table class="lt-table tight">
+          <thead><tr><th>Member</th><th>Program</th><th>Phone</th><th>Joined</th><th>Valid till</th><th>Status</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- court booking history (operational: last 30 days, filter by date) -->
+    <div class="glass glass-card tight hide" id="histCard" style="margin-top: var(--gap-3);">
+      <div class="card-head" style="margin-bottom: 10px;">
+        <div><div class="kicker">Court bookings</div><h2 style="font-size:16px;">Booking history</h2></div>
+        <div class="flex wrap" style="gap:8px;">
+          <input type="date" id="histDate" style="width:auto;" />
+          <button class="btn btn-glass btn-sm" id="histAll">Last 30 days</button>
+        </div>
+      </div>
+      <div class="table-wrap hist-wrap">
+        <table class="lt-table hist-table">
+          <thead><tr><th>When</th><th>Court</th><th>Booked by</th><th>Source</th><th>Amount</th><th></th></tr></thead>
+          <tbody id="histRows"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- add member -->
+  <div class="lt-modal-backdrop" id="amBackdrop">
+    <div class="glass lt-modal" style="width: min(430px, 100%);">
+      <div class="modal-head">
+        <div><div class="kicker">Members</div><h2 style="font-size:20px;">Add a member</h2></div>
+        <button class="btn btn-icon btn-ghost" id="amClose" aria-label="Close">✕</button>
+      </div>
+      <form id="amForm" class="lt-grid" style="gap: var(--gap-3);">
+        <label class="field"><span>Name</span><input type="text" name="name" placeholder="Full name" required /></label>
+        <label class="field"><span>Phone</span><input type="tel" name="phone" placeholder="98xxxxxxxx" required /></label>
+        <label class="field"><span>Program</span><select name="program" id="amProgram"></select></label>
+        <label class="field"><span>Playing at</span><select name="venue" id="amVenue"><option value="manikonda">Match Point · Manikonda</option></select></label>
+        <label class="field"><span>Membership</span><div class="chip-row" id="amPlan"></div></label>
+        <label class="field"><span>Start date</span><input type="date" name="joined" id="amJoined" /></label>
+        <div class="form-msg" id="amMsg" style="min-height:0;"></div>
+        <button class="btn btn-primary btn-block" type="submit">Add member</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- member detail (lightweight) -->
+  <div class="lt-modal-backdrop" id="mdBackdrop">
+    <div class="glass lt-modal" style="width: min(440px, 100%);">
+      <div class="modal-head">
+        <div><div class="kicker">Member</div><h2 id="mdName" style="font-size:21px;"></h2></div>
+        <button class="btn btn-icon btn-ghost" id="mdClose" aria-label="Close">✕</button>
+      </div>
+      <div id="mdBody"></div>
+    </div>
+  </div>
+
+  <!-- record payment + renew (from a member) -->
+  <div class="lt-modal-backdrop" id="mpBackdrop" style="z-index: 96;">
+    <div class="glass lt-modal" style="width: min(400px, 100%);">
+      <div class="modal-head">
+        <div><div class="kicker">Record payment</div><h2 id="mpName" style="font-size:19px;"></h2></div>
+        <button class="btn btn-icon btn-ghost" id="mpClose" aria-label="Close">✕</button>
+      </div>
+      <form id="mpForm" class="lt-grid" style="gap: var(--gap-3);">
+        <label class="field"><span>Amount received</span><input type="number" name="amount" id="mpAmt" /></label>
+        <label class="field"><span>Paid by</span>
+          <div class="chip-row filters" id="mpMode">
+            <button type="button" class="chip active" data-m="Cash">Cash</button>
+            <button type="button" class="chip" data-m="UPI">UPI</button>
+            <button type="button" class="chip" data-m="Card">Card</button>
+          </div>
+        </label>
+        <label class="field"><span>Renew membership by</span>
+          <div class="chip-row filters" id="mpDur">
+            <button type="button" class="chip active" data-mo="1">1 month</button>
+            <button type="button" class="chip" data-mo="3">3 months</button>
+            <button type="button" class="chip" data-mo="6">6 months</button>
+            <button type="button" class="chip" data-mo="0">Don't renew</button>
+          </div>
+        </label>
+        <div class="form-msg" id="mpMsg" style="min-height:0;"></div>
+        <button class="btn btn-primary btn-block" type="submit">Save payment</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="assets/js/core.js?v=8"></script>
+  <script src="assets/js/data.js?v=5"></script>
+  <script src="assets/js/cloud.js?v=7"></script>
+  <script>
+    LT.auth.require();
+    LT.managerShell("players.html");
+
+    (function () {
+      var filter = { q: "", program: "all" };
+      // reminder history keyed by member id: [{ at: iso, upi: string }, …] newest-first
+      var reminderHistory = {};
+
+      var chips = [{ id: "all", name: "All programs" }].concat(LT_DATA.programs);
+      var progSelect = document.getElementById("programSelect");
+      progSelect.innerHTML = chips.map(function (p) {
+        return '<option value="' + p.id + '">' + p.name + "</option>";
+      }).join("");
+      progSelect.addEventListener("change", function () {
+        filter.program = this.value;
+        render();
+      });
+      document.getElementById("q").addEventListener("input", function () { filter.q = this.value.toLowerCase(); render(); });
+
+      function fmtD(iso) { return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "2-digit" }); }
+      function normPhone(p) { return String(p || "").replace(/\D/g, "").slice(-10); }
+
+      // roster = seed members + any added on this device (merged, deduped by id).
+      // Renewals recorded via "Record payment" are stored as per-member overrides
+      // (new validTill + status) applied here so the roster reflects them at once.
+      function localMembers() { return LT.store.read("members", []); }
+      function memberOverrides() { return LT.store.read("member-overrides", {}); }
+      // venue scope: the full merged roster narrowed to the current venue
+      // scope BEFORE any downstream use (table, counts, reminder queue).
+      function allMembers() { return LT.venue.filter(LT_ROSTER(), function (m) { return m.venue; }); }
+      function memberById(id) { return allMembers().find(function (m) { return String(m.id) === String(id); }); }
+
+      /* ---------- add member ---------- */
+      var amBackdrop = document.getElementById("amBackdrop"), amPlan = 1;
+      document.getElementById("amProgram").innerHTML = LT_DATA.programs.map(function (p) {
+        return '<option value="' + p.id + '">' + p.name + "</option>";
+      }).join("");
+      document.getElementById("amPlan").innerHTML = LT_DATA.plans.map(function (pl, i) {
+        return '<button type="button" class="chip' + (i === 0 ? " active" : "") + '" data-m="' + pl.months + '">' + pl.label + "</button>";
+      }).join("");
+      document.getElementById("amPlan").addEventListener("click", function (e) {
+        var b = e.target.closest(".chip"); if (!b) return;
+        amPlan = +b.dataset.m;
+        this.querySelectorAll(".chip").forEach(function (c) { c.classList.toggle("active", c === b); });
+      });
+      document.getElementById("amJoined").value = LT.today();
+      document.getElementById("addBtn").addEventListener("click", function () {
+        document.getElementById("amForm").reset();
+        document.getElementById("amJoined").value = LT.today();
+        // default the venue to the current scope (scoped staff mostly add
+        // members at their own branch; "all" keeps the first option)
+        if (LT.venue.get() !== "all") document.getElementById("amVenue").value = LT.venue.get();
+        amPlan = 1;
+        document.getElementById("amPlan").querySelectorAll(".chip").forEach(function (c, i) { c.classList.toggle("active", i === 0); });
+        document.getElementById("amMsg").textContent = "";
+        amBackdrop.classList.add("open");
+      });
+      document.getElementById("amClose").addEventListener("click", function () { amBackdrop.classList.remove("open"); });
+      amBackdrop.addEventListener("click", function (e) { if (e.target === amBackdrop) amBackdrop.classList.remove("open"); });
+      document.getElementById("amForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        var f = new FormData(this);
+        var amMsg = document.getElementById("amMsg");
+        var name = (f.get("name") || "").trim(), phone = (f.get("phone") || "").trim();
+        if (!name) { amMsg.textContent = "Please enter the member's name."; amMsg.className = "form-msg error"; return; }
+        if (phone.replace(/\D/g, "").length < 10) { amMsg.textContent = "Please enter a valid 10-digit phone number."; amMsg.className = "form-msg error"; return; }
+        amMsg.textContent = "";
+        var joined = f.get("joined") || LT.today();
+        var vt = new Date(joined); vt.setMonth(vt.getMonth() + amPlan);
+        var m = {
+          id: "M" + Date.now(), name: name, phone: phone,
+          program: f.get("program"), venue: f.get("venue") || "manikonda",
+          joined: joined, validTill: LT.isoDate(vt), status: "active",
+        };
+        var mem = localMembers(); mem.push(m); LT.store.write("members", mem);
+        if (window.LT_CLOUD && LT_CLOUD.addMember) LT_CLOUD.addMember(m);
+        amBackdrop.classList.remove("open");
+        LT.toast("✓ " + m.name.split(" ")[0] + " added to the roster");
+        render();
+        paintReminders();
+      });
+
+      // full reminder history (cloud) → grouped by member for the timeline
+      if (window.LT_CLOUD && LT_CLOUD.fetchReminders) {
+        LT_CLOUD.fetchReminders().then(function (rows) {
+          if (!rows) return;
+          var by = {};
+          rows.forEach(function (r) {
+            var k = String(r.member_id);
+            (by[k] = by[k] || []).push({ at: r.sent_at, upi: r.upi_used, channel: r.channel });
+          });
+          Object.keys(by).forEach(function (k) {
+            by[k].sort(function (a, b) { return new Date(b.at) - new Date(a.at); });
+          });
+          reminderHistory = by;
+          if (mdBackdrop.classList.contains("open") && openMemberId) openMember(openMemberId);
+        });
+      }
+
+      // website coaching applications land in the cloud — surface them here
+      if (window.LT_CLOUD) {
+        LT_CLOUD.fetchApplications(10).then(function (rows) {
+          if (!rows || !rows.length) return;
+          var progName = function (id) {
+            var p = LT_DATA.programs.find(function (x) { return x.id === id; });
+            return p ? p.name : (id || "Any program");
+          };
+          document.getElementById("appTray").innerHTML = rows.map(function (a) {
+            return '<div class="app-row"><span class="aq-who">' + LT.esc(a.name) + "</span>" +
+              '<span class="aq-what">' + LT.esc(progName(a.program)) + (a.slot ? " · " + LT.esc(a.slot) : "") +
+              (a.trial_date ? " · trial " + fmtD(a.trial_date) : "") + "</span>" +
+              (a.phone ? '<a class="aq-call" href="https://wa.me/91' + String(a.phone).replace(/\D/g, "").slice(-10) + '">WhatsApp →</a>' : "") +
+              '<span class="aq-when">' + fmtD(a.created_at) + "</span></div>";
+          }).join("");
+          document.getElementById("appCard").classList.remove("hide");
+        });
+
+        // court booking history — operational list of the last 30 days,
+        // filterable by date (defaults to today). Transactional, NOT the
+        // aggregate booker analytics (those stay in the operator console).
+        var histAll = [];
+        function timeLabel(h) { var ap = h >= 12 ? "PM" : "AM"; var v = h % 12 || 12; return v + " " + ap; }
+        function renderHistory(dateFilter) {
+          var list = histAll.filter(function (b) { return !dateFilter || b.date === dateFilter; });
+          list.sort(function (a, b) { return a.date === b.date ? b.hour - a.hour : (a.date < b.date ? 1 : -1); });
+          var host = document.getElementById("histRows");
+          if (!list.length) {
+            host.innerHTML = '<tr><td colspan="6"><div class="empty-state">No bookings ' + (dateFilter ? "on this date." : "in the last 30 days.") + "</div></td></tr>";
+            return;
+          }
+          host.innerHTML = list.map(function (b) {
+            var wa = b.phone ? '<a class="btn btn-glass btn-sm" href="https://wa.me/91' + String(b.phone).replace(/\D/g, "").slice(-10) + '" target="_blank" rel="noopener">WhatsApp</a>' : "";
+            return "<tr><td>" + fmtD(b.date) + '<br /><span class="faint" style="font-size:11.5px;">' + timeLabel(b.hour) + "</span></td>" +
+              "<td class='num'>" + LT.esc(b.court || "—") + "</td>" +
+              "<td class='t-name'>" + LT.esc(b.name) + (b.phone ? '<br /><span class="faint" style="font-size:11.5px;">' + LT.esc(b.phone) + "</span>" : "") + "</td>" +
+              "<td>" + LT.esc(b.source || "Website") + "</td>" +
+              "<td class='num gold'>" + LT.fmtINR(b.amount) + "</td>" +
+              "<td>" + wa + "</td></tr>";
+          }).join("");
+        }
+        var histSince = new Date(); histSince.setDate(histSince.getDate() - 30);
+        LT_CLOUD.fetchBookings(LT.isoDate(histSince)).then(function (rows) {
+          // scope the history to the current venue (court prefix R/U is the
+          // fallback key for rows that don't carry sport/venue)
+          histAll = LT.venue.filter(
+            (rows || []).filter(function (b) { return b.status !== "cancelled"; }),
+            function (b) { return b.sport || LT_SLOTS.venueOf(b.court); }
+          );
+          var today = LT.today();
+          var histDate = document.getElementById("histDate");
+          histDate.value = today;
+          renderHistory(today);
+          histDate.addEventListener("change", function () { renderHistory(this.value); });
+          document.getElementById("histAll").addEventListener("click", function () { document.getElementById("histDate").value = ""; renderHistory(null); });
+          document.getElementById("histCard").classList.remove("hide");
+        });
+      }
+
+      function render() {
+        var all = allMembers();
+        var list = all.filter(function (m) {
+          if (filter.program !== "all" && m.program !== filter.program) return false;
+          if (filter.q && m.name.toLowerCase().indexOf(filter.q) === -1) return false;
+          return true;
+        });
+        document.getElementById("countLine").textContent = list.length + " of " + all.length + " members" +
+          (LT.venue.get() === "all" ? "" : " · " + LT.venue.label());
+        document.getElementById("rows").innerHTML = list.map(function (m) {
+          var p = LT_DATA.programs.find(function (x) { return x.id === m.program; });
+          var v = LT_DATA.sports[m.venue];
+          var venueTag = v ? ' · <span class="cell-tag gold" style="font-size:11.5px;">' + v.short + "</span>" : "";
+          var pill = m.status === "due" ? '<span class="cell-status red">Renewal due</span>' : '<span class="cell-status green">Active</span>';
+          return '<tr class="mem-row" data-mid="' + m.id + '">' +
+            '<td><div class="pl-name"><span class="av">' + LT.initials(m.name) + '</span><span class="t-name">' + LT.esc(m.name) + "</span></div></td>" +
+            "<td>" + (p ? p.name : "—") + venueTag + '</td><td class="num">' + LT.esc(m.phone) + "</td>" +
+            "<td>" + fmtD(m.joined) + "</td><td>" + fmtD(m.validTill) + "</td><td>" + pill + "</td></tr>";
+        }).join("") || '<tr><td colspan="6"><div class="empty-state">No members match your search.</div></td></tr>';
+      }
+      document.getElementById("rows").addEventListener("click", function (e) {
+        var row = e.target.closest(".mem-row"); if (row) openMember(row.dataset.mid);
+      });
+
+      /* ---------- member detail (lightweight, on-tap) ---------- */
+      var mdBackdrop = document.getElementById("mdBackdrop"), openMemberId = null;
+      // merged reminder history for a member: cloud log + a same-day local send
+      // that may not be in the last cloud fetch yet. Newest first.
+      function memberReminders(m) {
+        var list = (reminderHistory[String(m.id)] || []).slice();
+        var localLast = (LT.store.read("reminders", {}) || {})[m.id];
+        if (localLast && !list.some(function (r) { return Math.abs(new Date(r.at) - new Date(localLast)) < 60000; })) {
+          list.push({ at: localLast, upi: null, channel: "whatsapp" });
+        }
+        return list.sort(function (a, b) { return new Date(b.at) - new Date(a.at); });
+      }
+      function relDay(iso) {
+        var d = new Date(iso);
+        var days = Math.round((new Date(LT.isoDate(d)) - new Date(LT.today())) / 864e5);
+        return {
+          rel: days === 0 ? "Today" : days === -1 ? "Yesterday" : (-days) + " days ago",
+          time: d.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" }),
+          date: d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "2-digit" }),
+        };
+      }
+      function memberStats(m) {
+        var ph = normPhone(m.phone);
+        var bk = (LT_DATA.bookings || []).concat(typeof histAll !== "undefined" ? histAll : [])
+          .filter(function (b) { return ph && normPhone(b.phone) === ph && b.status !== "cancelled"; });
+        var paid = (LT_DATA.payments || []).filter(function (p) { return p.name === m.name; })
+          .reduce(function (s, p) { return s + (p.amount || 0); }, 0);
+        var att = 0;
+        for (var i = 0; i < 30; i++) {
+          var iso = LT.isoDate(new Date(Date.now() - i * 864e5));
+          if ((LT.store.read("att-" + iso, []) || []).indexOf(m.id) !== -1) att++;
+        }
+        return { bookings: bk.length, paid: paid, attendance: att };
+      }
+      function openMember(id) {
+        var m = memberById(id); if (!m) return;
+        openMemberId = id;
+        var p = LT_DATA.programs.find(function (x) { return x.id === m.program; });
+        var s = memberStats(m);
+        var hist = memberReminders(m);
+        var tlHtml = hist.length
+          ? hist.map(function (r, i) {
+              var rd = relDay(r.at);
+              return '<div class="md-tl-item' + (i === 0 ? "" : " faded") + '">' +
+                '<div class="md-tl-when">' + rd.rel + ' · ' + rd.date + '</div>' +
+                '<div class="md-tl-sub">WhatsApp · ' + rd.time + (r.upi ? ' · paid to ' + LT.esc(r.upi) : "") + '</div></div>';
+            }).join("")
+          : '<div class="md-tl-empty">No reminders sent yet.</div>';
+        var daysLeft = Math.round((new Date(m.validTill) - new Date(LT.today())) / 864e5);
+        var validTxt = daysLeft < 0 ? '<span style="color:var(--tx-red);">' + (-daysLeft) + "d overdue</span>"
+          : daysLeft <= 3 ? '<span style="color:var(--tx-gold);">in ' + daysLeft + "d</span>" : "in " + daysLeft + "d";
+        var joinedDays = Math.max(0, Math.round((new Date(LT.today()) - new Date(m.joined)) / 864e5));
+        var months = Math.floor(joinedDays / 30);
+        var tenure = months >= 1 ? months : joinedDays;
+        var tenureUnit = months >= 1 ? (months === 1 ? "month" : "months") : (joinedDays === 1 ? "day" : "days");
+        document.getElementById("mdName").textContent = m.name;
+        document.getElementById("mdBody").innerHTML =
+          '<div class="md-stats">' +
+            '<div class="bstat"><span class="k">Attendance</span><span class="v">' + s.attendance + '</span><span class="s">last 30d</span></div>' +
+            '<div class="bstat"><span class="k">Member for</span><span class="v">' + tenure + '</span><span class="s">' + tenureUnit + '</span></div>' +
+            '<div class="bstat"><span class="k">Paid</span><span class="v" style="font-size:16px;">' + LT.fmtINR(s.paid) + '</span><span class="s">to date</span></div>' +
+          "</div>" +
+          '<div class="md-facts">' +
+            '<div class="f"><span class="k">Program</span><span class="v">' + (p ? p.name : "—") + "</span></div>" +
+            '<div class="f"><span class="k">Venue</span><span class="v">' + (LT_DATA.sports[m.venue] ? LT_DATA.sports[m.venue].label : "—") + "</span></div>" +
+            '<div class="f"><span class="k">Phone</span><span class="v">' + LT.esc(m.phone) + "</span></div>" +
+            '<div class="f"><span class="k">Joined</span><span class="v">' + fmtD(m.joined) + "</span></div>" +
+            '<div class="f"><span class="k">Renews</span><span class="v">' + fmtD(m.validTill) + " · " + validTxt + "</span></div>" +
+            '<div class="f"><span class="k">Last reminded</span><span class="v">' + (hist.length ? relDay(hist[0].at).rel : "Never") + "</span></div>" +
+          "</div>" +
+          '<div class="md-tl-head"><h3>Reminder history</h3>' + (hist.length ? '<span class="n">' + hist.length + " sent</span>" : "") + "</div>" +
+          '<div class="md-tl">' + tlHtml + "</div>" +
+          '<div class="md-actions">' +
+            '<button class="btn btn-primary" data-md-remind="' + m.id + '">' +
+              '<svg viewBox="0 0 24 24" fill="currentColor" style="width:15px;height:15px;"><path d="M12.05 0C5.5 0 .16 5.34.16 11.9c0 2.1.55 4.14 1.6 5.95L.06 24l6.3-1.65a11.9 11.9 0 0 0 5.69 1.45c6.55 0 11.89-5.34 11.9-11.9C23.94 5.34 18.6 0 12.05 0m6.99 16.94c-.3.83-1.5 1.53-2.08 1.62-.53.08-1.2.11-1.94-.12-.45-.14-1.02-.33-1.76-.65-3.1-1.34-5.12-4.46-5.27-4.66-.15-.2-1.26-1.67-1.26-3.19s.8-2.27 1.08-2.58c.28-.31.61-.39.81-.39h.58c.19 0 .44-.07.68.52.25.6.85 2.06.92 2.21.08.15.13.33.03.53-.1.2-.15.32-.3.5-.14.17-.3.38-.44.51-.15.15-.3.3-.13.6.17.29.77 1.27 1.65 2.05 1.14 1.02 2.1 1.33 2.4 1.48.29.15.46.12.63-.07.2-.22.72-.84.91-1.13.2-.3.4-.25.66-.15.28.1 1.74.82 2.04.97.3.15.5.22.57.35.07.12.07.71-.23 1.54"/></svg>' +
+              " Remind</button>" +
+            '<button class="btn btn-glass" data-md-pay="' + m.id + '">Record payment</button>' +
+            '<a class="btn btn-glass" href="progress.html?player=' + m.id + '">Player progress</a>' +
+          "</div>";
+        mdBackdrop.classList.add("open");
+      }
+      document.getElementById("mdClose").addEventListener("click", function () { mdBackdrop.classList.remove("open"); openMemberId = null; });
+      mdBackdrop.addEventListener("click", function (e) { if (e.target === mdBackdrop) { mdBackdrop.classList.remove("open"); openMemberId = null; } });
+      document.getElementById("mdBody").addEventListener("click", function (e) {
+        var rem = e.target.closest("[data-md-remind]"), pay = e.target.closest("[data-md-pay]");
+        if (!rem && !pay) return;
+        var m = memberById(rem ? rem.dataset.mdRemind : pay.dataset.mdPay);
+        if (!m) return;
+        // keep the popup open so the new reminder appears in the timeline in
+        // place (WhatsApp opens in its own tab/app either way)
+        if (rem) openWhatsApp(m, Math.round((new Date(m.validTill) - new Date(LT.today())) / 864e5));
+        else openPay(m);
+      });
+
+      /* ---------- record payment + renew (cash / UPI / card at the desk) ---------- */
+      var mpBackdrop = document.getElementById("mpBackdrop"), mpMode = "Cash", mpDur = 1, mpMember = null;
+      function chipGroup(hostId, attr, set) {
+        document.getElementById(hostId).addEventListener("click", function (e) {
+          var b = e.target.closest(".chip"); if (!b) return;
+          this.querySelectorAll(".chip").forEach(function (c) { c.classList.toggle("active", c === b); });
+          set(b.dataset[attr]);
+        });
+      }
+      chipGroup("mpMode", "m", function (v) { mpMode = v; });
+      chipGroup("mpDur", "mo", function (v) {
+        mpDur = +v;
+        // the suggested amount tracks the chosen duration (staff can still edit)
+        var pl = LT_DATA.plans.find(function (p) { return p.months === mpDur; });
+        if (pl) document.getElementById("mpAmt").value = pl.amount;
+      });
+      function openPay(m) {
+        mpMember = m; mpMode = "Cash"; mpDur = 1;
+        document.getElementById("mpName").textContent = m.name;
+        document.getElementById("mpAmt").value = renewalAmount();
+        document.querySelectorAll("#mpMode .chip").forEach(function (c, i) { c.classList.toggle("active", i === 0); });
+        document.querySelectorAll("#mpDur .chip").forEach(function (c, i) { c.classList.toggle("active", i === 0); });
+        document.getElementById("mpMsg").textContent = "";
+        mpBackdrop.classList.add("open");
+      }
+      document.getElementById("mpClose").addEventListener("click", function () { mpBackdrop.classList.remove("open"); });
+      mpBackdrop.addEventListener("click", function (e) { if (e.target === mpBackdrop) mpBackdrop.classList.remove("open"); });
+      document.getElementById("mpForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        var m = mpMember; if (!m) return;
+        var mpMsg = document.getElementById("mpMsg");
+        var amt = +document.getElementById("mpAmt").value || 0;
+        if (amt <= 0) { mpMsg.textContent = "Enter the amount received (₹1 or more)."; mpMsg.className = "form-msg error"; return; }
+        mpMsg.textContent = "";
+        var p = LT_DATA.programs.find(function (x) { return x.id === m.program; });
+        // 1) log the payment (cloud ledger + local so Finance shows it at once)
+        var pay = { ref: "P-" + Date.now(), venue: m.venue || null, name: m.name, type: "Membership",
+          detail: (p ? p.name : "Membership") + (mpDur ? " · " + mpDur + "mo renewal" : ""), amount: amt, mode: mpMode, on: LT.today() };
+        var local = LT.store.read("payments", []); local.unshift(pay); LT.store.write("payments", local);
+        if (window.LT_CLOUD && LT_CLOUD.addPayment) LT_CLOUD.addPayment(pay);
+        // 2) renew: extend validity from max(today, current) by the chosen months
+        if (mpDur > 0) {
+          var from = new Date(Math.max(new Date(m.validTill).getTime(), new Date(LT.today()).getTime()));
+          from.setMonth(from.getMonth() + mpDur);
+          var ov = memberOverrides(); ov[m.id] = { validTill: LT.isoDate(from), status: "active" }; LT.store.write("member-overrides", ov);
+        }
+        mpBackdrop.classList.remove("open");
+        LT.toast("✓ ₹" + amt.toLocaleString("en-IN") + " recorded" + (mpDur ? " · membership renewed" : ""));
+        render(); paintReminders();
+        if (mdBackdrop.classList.contains("open")) openMember(m.id);
+      });
+
+      /* ================= renewal reminders (WhatsApp) =================
+         Heads-up 2 days before renewal, due-day/overdue chasers after.
+         Send opens WhatsApp with the message prefilled; the UPI ID in the
+         payment line rotates by day-of-month window (see LT_DATA.billing). */
+      function reminders() { return LT.store.read("reminders", {}); }
+      function activeUpi() {
+        var b = LT_DATA.billing;
+        return b.upiIds[Math.floor((new Date().getDate() - 1) / b.upiWindowDays) % b.upiIds.length];
+      }
+      function renewalAmount() { return LT_DATA.plans[0].amount; }
+      function renewalQueue() {
+        return allMembers().map(function (m) {
+          var daysTo = Math.round((new Date(m.validTill) - new Date(LT.today())) / 864e5);
+          return { m: m, daysTo: daysTo };
+        }).filter(function (x) { return x.daysTo <= 2; }).sort(function (a, b) { return a.daysTo - b.daysTo; });
+      }
+      function niceDate(iso) { return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "long" }); }
+      // one tappable https link → pay.html (renders a QR + UPI-app buttons that
+      // work on BOTH iPhone and Android, unlike a bare upi:// link)
+      function payLink(amt, note) {
+        var b = LT_DATA.billing, upi = activeUpi();
+        var base = location.origin + location.pathname.replace(/[^/]*$/, "") + "pay.html";
+        return base + "?pa=" + encodeURIComponent(upi) + "&pn=" + encodeURIComponent(b.payee) +
+          "&am=" + amt + "&tn=" + encodeURIComponent(note);
+      }
+      function waMessage(m, daysTo) {
+        var p = LT_DATA.programs.find(function (x) { return x.id === m.program; });
+        var upi = activeUpi(), amt = renewalAmount();
+        var at = LT_DATA.sports[m.venue] ? LT_DATA.sports[m.venue].label : "Match Point";
+        var first = m.name.split(" ")[0], when = niceDate(m.validTill);
+        var opening = daysTo > 0
+          ? "Hi " + first + "! 🏸 A quick heads-up — your " + p.name + " membership at " + at + " renews on " + when + " (in " + daysTo + (daysTo === 1 ? " day" : " days") + ")."
+          : daysTo === 0
+            ? "Hi " + first + "! 🏸 Your " + p.name + " membership at " + at + " renews today, " + when + "."
+            : "Hi " + first + ", your " + p.name + " membership at " + at + " was due on " + when + " (" + (-daysTo) + (daysTo === -1 ? " day" : " days") + " ago). Renew to keep your sessions going.";
+        return opening +
+          "\n\nAmount: ₹" + amt.toLocaleString("en-IN") +
+          "\nPay in one tap 👉 " + payLink(amt, p.name + " renewal") +
+          "\n(or UPI to " + upi + ")" +
+          "\n\nSee you on court! 🏸";
+      }
+      function openWhatsApp(m, daysTo) {
+        var phone = "91" + String(m.phone).replace(/\D/g, "").slice(-10);
+        window.open("https://wa.me/" + phone + "?text=" + encodeURIComponent(waMessage(m, daysTo)), "_blank", "noopener");
+        var now = new Date().toISOString(), upi = activeUpi();
+        var rem = reminders(); rem[m.id] = now; LT.store.write("reminders", rem);
+        // reflect it in the timeline right away (cloud confirms on next load)
+        var k = String(m.id);
+        (reminderHistory[k] = reminderHistory[k] || []).unshift({ at: now, upi: upi, channel: "whatsapp" });
+        if (window.LT_CLOUD) { LT_CLOUD.logReminder(m.id, upi); LT_CLOUD.track("reminder_sent", { daysTo: daysTo }); }
+        LT.toast("WhatsApp opened for " + m.name.split(" ")[0] + " ✓");
+        paintReminders();
+        if (mdBackdrop.classList.contains("open") && openMemberId) openMember(openMemberId);
+      }
+      function downloadNotice(m, daysTo) {
+        var p = LT_DATA.programs.find(function (x) { return x.id === m.program; });
+        var b = LT_DATA.billing, upi = activeUpi(), amt = renewalAmount(), c = LT_DATA.contact;
+        var html = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'>" +
+          "<head><meta charset='utf-8'><title>Renewal Notice</title></head>" +
+          "<body style='font-family:Georgia,serif;color:#1a1a1a;'>" +
+          "<h1 style='color:#0d0c1a;margin-bottom:0;'>MATCH POINT</h1>" +
+          "<p style='color:#5f8500;font-weight:bold;margin-top:2px;'>Train • Compete • Grow</p>" +
+          "<hr style='border:1px solid #79a900;'/><h2>Membership Renewal Notice</h2>" +
+          "<p>Date: " + niceDate(LT.today()) + "</p><p>Dear " + m.name + ",</p>" +
+          "<p>Your <b>" + p.name + "</b> membership " +
+          (daysTo >= 0 ? "is due for renewal on <b>" + niceDate(m.validTill) + "</b>." :
+            "was due for renewal on <b>" + niceDate(m.validTill) + "</b>. Kindly renew at the earliest to continue your sessions.") + "</p>" +
+          "<table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;'>" +
+          "<tr><td><b>Renewal amount</b></td><td>₹" + amt.toLocaleString("en-IN") + "</td></tr>" +
+          "<tr><td><b>Pay by UPI</b></td><td>" + upi + " (" + b.payee + ")</td></tr>" +
+          "<tr><td><b>Cash / card</b></td><td>At the front desk, 6 AM – 12 AM daily</td></tr></table>" +
+          "<p>Questions? Call " + c.phone + ".</p><p>— Match Point Front Desk<br/>" + c.address + "</p></body></html>";
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob(["﻿", html], { type: "application/msword" }));
+        a.download = "Match Point-Renewal-Notice-" + m.name.replace(/\s+/g, "-") + ".doc";
+        a.click(); URL.revokeObjectURL(a.href);
+      }
+      function paintReminders() {
+        var rem = reminders(), queue = renewalQueue(), host = document.getElementById("remList");
+        document.getElementById("remCard").classList.remove("hide");
+        document.getElementById("remUpi").innerHTML = "Paid to <b>" + activeUpi() + "</b>";
+        if (!queue.length) { host.innerHTML = '<div class="rem-empty">Everyone is paid up 🏸</div>'; return; }
+        host.innerHTML = queue.map(function (x) {
+          var m = x.m, daysTo = x.daysTo;
+          var when = rem[m.id];
+          var today = when && LT.isoDate(new Date(when)) === LT.today();
+          var stateHtml = daysTo > 0
+            ? '<span class="soon">Renews in ' + daysTo + (daysTo === 1 ? " day" : " days") + "</span>"
+            : '<span class="late">' + (daysTo === 0 ? "Due today" : -daysTo + (daysTo === -1 ? " day" : " days") + " overdue") + "</span>";
+          return '<div class="rem-item clickable' + (daysTo > 0 ? " upcoming" : "") + (today ? " done" : "") + '" data-open="' + m.id + '" role="button" tabindex="0" title="View member & reminder history">' +
+            '<span class="av">' + LT.initials(m.name) + "</span>" +
+            '<span class="rm-body"><span class="rm-name">' + LT.esc(m.name) + "</span>" +
+            '<span class="rm-sub">' + stateHtml + (today ? ' · <span class="sent">sent ✓</span>' : "") + "</span></span>" +
+            '<button class="btn btn-primary btn-sm wa" data-wa="' + m.id + '">' +
+            '<svg viewBox="0 0 24 24" fill="currentColor" style="width:15px;height:15px;"><path d="M12.05 0C5.5 0 .16 5.34.16 11.9c0 2.1.55 4.14 1.6 5.95L.06 24l6.3-1.65a11.9 11.9 0 0 0 5.69 1.45c6.55 0 11.89-5.34 11.9-11.9C23.94 5.34 18.6 0 12.05 0m6.99 16.94c-.3.83-1.5 1.53-2.08 1.62-.53.08-1.2.11-1.94-.12-.45-.14-1.02-.33-1.76-.65-3.1-1.34-5.12-4.46-5.27-4.66-.15-.2-1.26-1.67-1.26-3.19s.8-2.27 1.08-2.58c.28-.31.61-.39.81-.39h.58c.19 0 .44-.07.68.52.25.6.85 2.06.92 2.21.08.15.13.33.03.53-.1.2-.15.32-.3.5-.14.17-.3.38-.44.51-.15.15-.3.3-.13.6.17.29.77 1.27 1.65 2.05 1.14 1.02 2.1 1.33 2.4 1.48.29.15.46.12.63-.07.2-.22.72-.84.91-1.13.2-.3.4-.25.66-.15.28.1 1.74.82 2.04.97.3.15.5.22.57.35.07.12.07.71-.23 1.54"/></svg>' +
+            " Send</button></div>";
+        }).join("");
+      }
+      document.getElementById("remList").addEventListener("click", function (e) {
+        // Send button → open WhatsApp; anywhere else on the row → member popup
+        var wa = e.target.closest("[data-wa]");
+        if (wa) {
+          var x = renewalQueue().find(function (q) { return String(q.m.id) === wa.dataset.wa; });
+          if (x) openWhatsApp(x.m, x.daysTo);
+          return;
+        }
+        var row = e.target.closest("[data-open]");
+        if (row) openMember(row.dataset.open);
+      });
+      document.getElementById("remindAll").addEventListener("click", function () {
+        var rem = reminders();
+        var next = renewalQueue().find(function (x) { return !(rem[x.m.id] && LT.isoDate(new Date(rem[x.m.id])) === LT.today()); });
+        if (!next) { LT.toast("Everyone in the queue reminded today ✓"); return; }
+        openWhatsApp(next.m, next.daysTo);
+      });
+
+      render();
+      paintReminders();
+    })();
+  </script>
+</body>
+</html>

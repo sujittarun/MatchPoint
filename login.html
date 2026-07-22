@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d0c1a" />
+  <title>Staff Login — Match Point</title>
+  <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg?v=2" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/glass.css?v=18" />
+  <script>document.documentElement.dataset.theme = localStorage.getItem("mp-theme") || "dark"; document.documentElement.classList.add("lt-js");</script>
+  <style>
+    .login-wrap { min-height: 100dvh; display: grid; place-items: center; padding: var(--gap-4); }
+    .login-card { width: min(420px, 100%); padding: var(--gap-5) var(--gap-4); text-align: center; }
+    /* The full two-player emblem, boxless — the artwork fills its canvas,
+       so no tile crops it. Theme-aware shadow keeps the white linework
+       visible over light glass. */
+    .login-card .mark { width: auto; height: auto; margin: 0 auto var(--gap-2); display: grid; place-items: center; }
+    .login-card .mark img { width: 150px; height: auto; max-width: none;
+      filter: drop-shadow(0 4px 14px rgba(0,0,0,.5)); }
+    :root[data-theme="light"] .login-card .mark img {
+      /* white players → ink, gold centre stays amber (filter from core.js) */
+      filter: url(#mxInk); }
+    .login-card h1 { font-size: 22px; font-weight: 800; }
+    .login-card .sub { color: var(--ink-mid); font-size: 13.5px; margin-top: 5px; }
+    .login-card form { display: flex; flex-direction: column; gap: var(--gap-3); margin-top: var(--gap-4); text-align: left; }
+    .login-foot { margin-top: var(--gap-3); font-size: 12.5px; color: var(--ink-low); display: flex; justify-content: space-between; }
+  </style>
+</head>
+<body>
+  <div class="lt-bg" aria-hidden="true"></div>
+  <button type="button" class="theme-toggle" style="position:fixed;top:16px;right:16px;z-index:70;"></button>
+
+  <div class="login-wrap">
+    <div class="glass login-card reveal in">
+      <div class="mark" data-logo="52"></div>
+      <h1>Match Point</h1>
+      <p class="sub">Manager Console · Hyderabad</p>
+      <form id="loginForm">
+        <label class="field"><span>Email</span><input type="email" name="email" value="staff@matchpointacademy.in" placeholder="staff@matchpointacademy.in" autocomplete="username" /></label>
+        <label class="field"><span>Password</span><input type="password" name="password" value="MatchPoint!NextLevel#2026" placeholder="••••••••" autocomplete="current-password" /></label>
+        <div class="form-msg" id="msg" style="min-height:0;"></div>
+        <button type="submit" class="btn btn-primary btn-block btn-lg">Sign in</button>
+      </form>
+      <div class="login-foot">
+        <a href="#" id="forgot">Forgot password?</a>
+        <a href="index.html">← Back to website</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/js/core.js?v=8"></script>
+  <script src="assets/js/cloud.js?v=7"></script>
+  <script>
+    document.getElementById("loginForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var d = new FormData(this);
+      var msg = document.getElementById("msg");
+      var email = String(d.get("email") || "").trim(), pw = String(d.get("password") || "").trim();
+      if (!email || !pw) {
+        msg.textContent = "Enter your email and password.";
+        msg.className = "form-msg error";
+        return;
+      }
+      function go() { LT.toast("Welcome back!"); setTimeout(function () { location.href = "dashboard.html"; }, 400); }
+      try { localStorage.setItem("mp-last-email", email); } catch (err) {}
+      LT_CLOUD.signIn(email, pw).then(function (s) {
+        if (s.role !== "staff" && s.role !== "operator") {
+          LT_CLOUD.signOut();
+          msg.textContent = "This account has no staff access.";
+          msg.className = "form-msg error";
+          return;
+        }
+        go();
+      }).catch(function (err) {
+        msg.textContent = /no connection/.test(String(err.message)) ? "No connection — try again." : "Wrong email or password.";
+        msg.className = "form-msg error";
+      });
+    });
+    try { // remember the last signed-in email across visits
+      var last = localStorage.getItem("mp-last-email");
+      if (last) document.querySelector('[name="email"]').value = last;
+    } catch (err) {}
+    document.getElementById("forgot").addEventListener("click", function (e) {
+      e.preventDefault();
+      LT.toast("Ask the academy admin to reset your password.");
+    });
+  </script>
+</body>
+</html>
