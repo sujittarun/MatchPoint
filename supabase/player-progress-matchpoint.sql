@@ -353,6 +353,7 @@ insert into public.skill_catalog(tenant_id,framework_version,skill_id,level,cate
 ('matchpoint',1,'f-serve',1,'Serve / receive','Short serve','Legal, repeatable low trajectory',true,60),
 ('matchpoint',1,'f-rally',1,'Match craft','Cooperative 10-shot rally','Controls direction and tempo',true,70),
 ('matchpoint',1,'f-rules',1,'Match craft','Scoring & court rules','Scores and positions independently',false,80),
+('matchpoint',1,'f-athletic',1,'Physical','Jump & landing mechanics','Soft, balanced two-foot landings',false,90),
 ('matchpoint',1,'d-split',2,'Movement','Timed split step','Lands as opponent contacts',true,110),
 ('matchpoint',1,'d-six',2,'Movement','Six-corner shadow','Efficient chasse, crossover and recovery',true,120),
 ('matchpoint',1,'d-clear',2,'Strokes','Directional clear','Straight and cross-court depth',true,130),
@@ -361,6 +362,8 @@ insert into public.skill_catalog(tenant_id,framework_version,skill_id,level,cate
 ('matchpoint',1,'d-serve',2,'Serve / receive','Long serve & return','Selects response by flight',true,160),
 ('matchpoint',1,'d-drive',2,'Serve / receive','Drive exchange','Compact action in front of body',true,170),
 ('matchpoint',1,'d-pattern',2,'Match craft','Clear–drop movement pattern','Recovers and repeats under control',true,180),
+('matchpoint',1,'d-flick',2,'Serve / receive','Flick serve','Disguised until the final moment',false,185),
+('matchpoint',1,'d-routine',2,'Match craft','Simple pre-serve routine','Same breath and reset every time',false,188),
 ('matchpoint',1,'i-smash',3,'Attack','Smash technique','Contact in front; steep controlled finish',true,210),
 ('matchpoint',1,'i-block',3,'Defence','Smash block defence','Absorbs pace straight and cross',true,220),
 ('matchpoint',1,'i-backhand',3,'Strokes','Backhand clear','Sound grip change and rotation',true,230),
@@ -369,6 +372,9 @@ insert into public.skill_catalog(tenant_id,framework_version,skill_id,level,cate
 ('matchpoint',1,'i-single',3,'Tactics','Singles base & construction','Moves opponent before attacking',true,260),
 ('matchpoint',1,'i-double',3,'Tactics','Doubles rotation','Transitions attack–defence with partner',true,270),
 ('matchpoint',1,'i-condition',3,'Physical','Repeat-footwork capacity','Maintains quality across six sets',true,280),
+('matchpoint',1,'i-around',3,'Strokes','Around-the-head clear','Covers the backhand corner with forehand',false,283),
+('matchpoint',1,'i-prevent',3,'Physical','Strength & injury-prevention basics','Shoulder, knee and ankle care habits',false,286),
+('matchpoint',1,'i-match',3,'Match craft','Competitive match play','Applies patterns in scored matches',false,289),
 ('matchpoint',1,'a-jump',4,'Attack','Jump smash','Stable take-off, contact and landing',true,310),
 ('matchpoint',1,'a-slice',4,'Attack','Slice & reverse-slice drop','Same preparation; controlled deception',true,320),
 ('matchpoint',1,'a-spin',4,'Front court','Tumbling net shot','Takes early and forces lift',true,330),
@@ -377,6 +383,8 @@ insert into public.skill_catalog(tenant_id,framework_version,skill_id,level,cate
 ('matchpoint',1,'a-rotate',4,'Tactics','Rear/front court rotation','Reads partner and closes space',true,360),
 ('matchpoint',1,'a-scan',4,'Tactics','Opponent pattern recognition','Names and exploits two tendencies',true,370),
 ('matchpoint',1,'a-pressure',4,'Match craft','Pressure routine','Resets consistently between rallies',true,380),
+('matchpoint',1,'a-hold',4,'Attack','Hold & double-motion deception','Delays the choice; sells the wrong shot',false,383),
+('matchpoint',1,'a-serve',4,'Serve / receive','Flick & drive serve variations','Varies serve height under pressure',false,386),
 ('matchpoint',1,'p-plan',5,'Competition','Individual game model','Defined strengths, patterns and constraints',true,410),
 ('matchpoint',1,'p-video',5,'Competition','Video self-analysis','Tags errors, winners and rally phases',true,420),
 ('matchpoint',1,'p-scout',5,'Tactics','Opponent scouting','Builds a practical pre-match plan',true,430),
@@ -384,7 +392,8 @@ insert into public.skill_catalog(tenant_id,framework_version,skill_id,level,cate
 ('matchpoint',1,'p-load',5,'Physical','Training-load awareness','Reports readiness and recovery honestly',true,450),
 ('matchpoint',1,'p-sim',5,'Competition','Tournament simulation','Executes routines under score pressure',true,460),
 ('matchpoint',1,'p-mental',5,'Match craft','Focus & emotional reset','Returns to process after errors',true,470),
-('matchpoint',1,'p-recovery',5,'Physical','Recovery habits','Sleep, hydration and nutrition plan',false,480)
+('matchpoint',1,'p-recovery',5,'Physical','Recovery habits','Sleep, hydration and nutrition plan',false,480),
+('matchpoint',1,'p-doubles',5,'Tactics','Doubles / mixed specialisation','Role clarity, formations and service play',false,490)
 on conflict(tenant_id,framework_version,skill_id) do update set
   level=excluded.level,category=excluded.category,name=excluded.name,cue=excluded.cue,required=excluded.required,display_order=excluded.display_order,active=true;
 

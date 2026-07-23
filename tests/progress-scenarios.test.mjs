@@ -33,17 +33,17 @@ function engine({ venue = "all", members } = {}) {
   return { LTP: context.window.LTP, memory };
 }
 
-test("framework contains five progressive levels and 40 observable competencies", () => {
+test("framework contains five progressive levels and 49 observable competencies", () => {
   const { LTP } = engine();
   assert.equal(LTP.levels.length, 5);
-  assert.equal(LTP.skills.length, 40);
+  assert.equal(LTP.skills.length, 49);
   assert.deepEqual(Array.from(new Set(LTP.skills.map((s) => s.level))), [1, 2, 3, 4, 5]);
 });
 
 test("optional competency never blocks a required promotion gate", () => {
   const { LTP } = engine();
   const player = LTP.profile(8);
-  assert.equal(LTP.completion(player), 88);
+  assert.equal(LTP.completion(player), 78);
   assert.equal(LTP.gateCompletion(player), 100);
   assert.equal(LTP.signal(player), "ready");
   assert.equal(LTP.promote(8, "Sowmya Rao").level, 2);

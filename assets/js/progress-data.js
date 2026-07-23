@@ -23,6 +23,7 @@
     skill("f-serve",1,"Serve / receive","Short serve","Legal, repeatable low trajectory"),
     skill("f-rally",1,"Match craft","Cooperative 10-shot rally","Controls direction and tempo"),
     skill("f-rules",1,"Match craft","Scoring & court rules","Scores and positions independently",false),
+    skill("f-athletic",1,"Physical","Jump & landing mechanics","Soft, balanced two-foot landings",false),
 
     skill("d-split",2,"Movement","Timed split step","Lands as opponent contacts"),
     skill("d-six",2,"Movement","Six-corner shadow","Efficient chasse, crossover and recovery"),
@@ -32,6 +33,8 @@
     skill("d-serve",2,"Serve / receive","Long serve & return","Selects response by flight"),
     skill("d-drive",2,"Serve / receive","Drive exchange","Compact action in front of body"),
     skill("d-pattern",2,"Match craft","Clear–drop movement pattern","Recovers and repeats under control"),
+    skill("d-flick",2,"Serve / receive","Flick serve","Disguised until the final moment",false),
+    skill("d-routine",2,"Match craft","Simple pre-serve routine","Same breath and reset every time",false),
 
     skill("i-smash",3,"Attack","Smash technique","Contact in front; steep controlled finish"),
     skill("i-block",3,"Defence","Smash block defence","Absorbs pace straight and cross"),
@@ -41,6 +44,9 @@
     skill("i-single",3,"Tactics","Singles base & construction","Moves opponent before attacking"),
     skill("i-double",3,"Tactics","Doubles rotation","Transitions attack–defence with partner"),
     skill("i-condition",3,"Physical","Repeat-footwork capacity","Maintains quality across six sets"),
+    skill("i-around",3,"Strokes","Around-the-head clear","Covers the backhand corner with forehand",false),
+    skill("i-prevent",3,"Physical","Strength & injury-prevention basics","Shoulder, knee and ankle care habits",false),
+    skill("i-match",3,"Match craft","Competitive match play","Applies patterns in scored matches",false),
 
     skill("a-jump",4,"Attack","Jump smash","Stable take-off, contact and landing"),
     skill("a-slice",4,"Attack","Slice & reverse-slice drop","Same preparation; controlled deception"),
@@ -50,6 +56,8 @@
     skill("a-rotate",4,"Tactics","Rear/front court rotation","Reads partner and closes space"),
     skill("a-scan",4,"Tactics","Opponent pattern recognition","Names and exploits two tendencies"),
     skill("a-pressure",4,"Match craft","Pressure routine","Resets consistently between rallies"),
+    skill("a-hold",4,"Attack","Hold & double-motion deception","Delays the choice; sells the wrong shot",false),
+    skill("a-serve",4,"Serve / receive","Flick & drive serve variations","Varies serve height under pressure",false),
 
     skill("p-plan",5,"Competition","Individual game model","Defined strengths, patterns and constraints"),
     skill("p-video",5,"Competition","Video self-analysis","Tags errors, winners and rally phases"),
@@ -58,7 +66,8 @@
     skill("p-load",5,"Physical","Training-load awareness","Reports readiness and recovery honestly"),
     skill("p-sim",5,"Competition","Tournament simulation","Executes routines under score pressure"),
     skill("p-mental",5,"Match craft","Focus & emotional reset","Returns to process after errors"),
-    skill("p-recovery",5,"Physical","Recovery habits","Sleep, hydration and nutrition plan",false)
+    skill("p-recovery",5,"Physical","Recovery habits","Sleep, hydration and nutrition plan",false),
+    skill("p-doubles",5,"Tactics","Doubles / mixed specialisation","Role clarity, formations and service play",false)
   ];
 
   function completed(level, count) {

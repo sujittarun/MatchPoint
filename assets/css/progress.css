@@ -44,3 +44,8 @@
 @media(max-width:1050px){.coach-monitor{grid-template-columns:1fr 1fr}.observation-form{grid-template-columns:1fr 1fr}.observation-form input:first-child,.observation-form input:nth-last-child(2){grid-column:span 2}}
 @media(max-width:699px){.coach-monitor{grid-template-columns:1fr}.training-status-control{align-items:flex-start;flex-direction:column}.training-status-control .lt-filter,.training-status-control select{width:100%}.goal-form,.constraint-form,.observation-form,.review-form{grid-template-columns:1fr}.observation-form input:first-child,.observation-form input:nth-last-child(2){grid-column:auto}}
 @media(max-width:699px){.player-heading{min-width:0}.player-heading>div{min-width:0}.player-heading .sub{max-width:245px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.progress-drawer-foot>div{max-width:44%}.progress-drawer-foot .btn{max-width:54%;overflow:hidden;text-overflow:ellipsis}}
+
+/* one-line orientation strip at the top of the player drawer */
+.drawer-guide{margin-top:14px;padding:12px 15px;border:1px solid rgba(201,255,53,.3);background:rgba(201,255,53,.07);border-radius:var(--r-md);font-size:12.5px;line-height:1.55;color:var(--ink-mid)}
+.drawer-guide strong{color:var(--ink-hi)}
+.training-status-control{margin-top:28px}
