@@ -10,6 +10,27 @@
   var currentMemberId = null;
   var requestedPlayer = new URLSearchParams(location.search).get("player");
 
+  /* ---- feature flags ----
+     Flip a value to true and the section returns fully wired — forms,
+     local storage and cloud sync for every section stay intact while off.
+     A per-device override can be set from the console:
+       LT.store.write("progress-features", { sessionNote: true })            */
+  var FEATURES = Object.assign({
+    sessionNote: false,       // "Quick session note" after training
+    playerGoals: false,       // monthly player goals
+    careInstructions: false   // load / participation constraints
+  }, LT.store.read("progress-features", {}));
+  document.querySelectorAll("[data-feature]").forEach(function (el) {
+    if (FEATURES[el.dataset.feature] === false) el.classList.add("hide");
+  });
+  (function paintGuide() {
+    var guide = document.querySelector(".drawer-guide");
+    if (!guide) return;
+    guide.innerHTML = "<strong>How this works:</strong> after each session, tick the skills the player proved" +
+      (FEATURES.sessionNote ? " and leave a quick note" : "") +
+      ". Every 45 days, do the review. When every required skill is ✓, promote.";
+  })();
+
   var signalLabel = { fast:"Fast learner", ready:"Ready for review", stalled:"Needs attention", managed:"Managed pathway", "on-track":"On track" };
   var signalPriority = { ready:1, stalled:2, managed:3, fast:4, "on-track":5 };
   var statusLabel = { active:"Active", "load-managed":"Load managed", paused:"Paused", "return-to-play":"Return to play", exited:"Exited pathway" };
