@@ -65,7 +65,7 @@
     var coaches=Object.keys(by).sort(function(a,b){return by[b].attention-by[a].attention||a.localeCompare(b);});
     document.getElementById("coachMonitor").innerHTML=coaches.map(function(coach){
       var b=by[coach],coverage=b.assigned?Math.round(b.recent/b.assigned*100):0;
-      return '<article class="coach-row '+(b.attention?'needs-review':'')+'"><div class="coach-row-head"><strong>'+esc(coach)+'</strong><span>'+(b.attention?b.attention+' action'+(b.attention===1?'':'s'):'Coverage clear')+'</span></div><div class="coach-stats"><div class="coach-stat"><b>'+b.assigned+'</b><small>assigned players</small></div><div class="coach-stat"><b>'+coverage+'%</b><small>reviewed in 30d</small></div><div class="coach-stat"><b>'+b.ready+'</b><small>promotion reviews</small></div></div></article>';
+      return '<article class="coach-row '+(b.attention?'needs-review':'')+'"><div class="coach-row-head"><strong>'+esc(coach)+'</strong><span>'+(b.attention?b.attention+' action'+(b.attention===1?'':'s')+' pending':'All caught up')+'</span></div><div class="coach-stats"><div class="coach-stat"><b>'+b.assigned+'</b><small>players assigned</small></div><div class="coach-stat"><b>'+coverage+'%</b><small>reviewed · 30 days</small></div><div class="coach-stat"><b>'+b.ready+'</b><small>ready to move up</small></div></div></article>';
     }).join("")||'<div class="empty-state">No assigned development players yet.</div>';
   }
 

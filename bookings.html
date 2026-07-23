@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/glass.css?v=18" />
+  <link rel="stylesheet" href="assets/css/glass.css?v=19" />
   <script>document.documentElement.dataset.theme = localStorage.getItem("mp-theme") || "dark"; document.documentElement.classList.add("lt-js");</script>
   <style>
     .req-tray { display: flex; flex-direction: column; gap: 8px; }
@@ -82,24 +82,6 @@
       </div>
     </div>
 
-    <!-- booking channels, last 30 days -->
-    <div class="glass glass-card tight reveal">
-      <div class="card-head" style="margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
-        <div><div class="kicker">Channels</div><h2 style="font-size:16px;">Bookings by source · last 30 days</h2></div>
-        <div class="flex" style="gap: 8px;">
-          <button class="btn btn-glass btn-sm" id="chnBtn" type="button" style="display:inline-flex;align-items:center;gap:6px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M9 17H7A5 5 0 0 1 7 7h2M15 7h2a5 5 0 0 1 0 10h-2M8 12h8"/></svg>
-            Connect channels</button>
-          <button class="btn btn-primary btn-sm" id="syncBtn" type="button" style="display:inline-flex;align-items:center;gap:6px;">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg>
-            Sync channels</button>
-        </div>
-      </div>
-      <div class="ch-bar" id="chBar"></div>
-      <div class="ch-legend" id="chLegend"></div>
-      <div class="chn-status" id="chnStatus"></div>
-    </div>
-
     <!-- unassigned web requests -->
     <div class="glass glass-card tight hide" id="reqCard">
       <div class="card-head" style="margin-bottom: 10px;">
@@ -126,6 +108,25 @@
       <span><span class="sw" style="background:repeating-linear-gradient(45deg, rgba(154,168,255,.55) 0 4px, rgba(154,168,255,.12) 4px 8px);"></span>Pending</span>
       <span><span class="sw sw-free"></span>Free</span>
       <span><span class="sw sw-free" style="opacity:.3;"></span>Past</span>
+    </div>
+
+    <!-- booking channels, last 30 days — reference info, so it sits below the
+         live court board (the screen's primary task) -->
+    <div class="glass glass-card tight reveal">
+      <div class="card-head" style="margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+        <div><div class="kicker">Channels</div><h2 style="font-size:16px;">Where bookings come from · last 30 days</h2></div>
+        <div class="flex" style="gap: 8px;">
+          <button class="btn btn-glass btn-sm" id="chnBtn" type="button" style="display:inline-flex;align-items:center;gap:6px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M9 17H7A5 5 0 0 1 7 7h2M15 7h2a5 5 0 0 1 0 10h-2M8 12h8"/></svg>
+            Connect channels</button>
+          <button class="btn btn-glass btn-sm" id="syncBtn" type="button" style="display:inline-flex;align-items:center;gap:6px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg>
+            Refresh partner bookings</button>
+        </div>
+      </div>
+      <div class="ch-bar" id="chBar"></div>
+      <div class="ch-legend" id="chLegend"></div>
+      <div class="chn-status" id="chnStatus"></div>
     </div>
   </main>
 

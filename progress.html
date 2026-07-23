@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/glass.css?v=18" />
+  <link rel="stylesheet" href="assets/css/glass.css?v=19" />
   <link rel="stylesheet" href="assets/css/progress.css?v=5" />
   <script>document.documentElement.dataset.theme = localStorage.getItem("mp-theme") || "dark"; document.documentElement.classList.add("lt-js");</script>
 </head>
@@ -17,7 +17,7 @@
   <div class="lt-bg" aria-hidden="true"></div>
   <main class="lt-page progress-page">
     <div class="card-head progress-title">
-      <div><div class="kicker">Player development</div><h2>Progress intelligence</h2><div class="sub">Coach-verified skills, level movement and academy-wide talent signals.</div></div>
+      <div><div class="kicker">Player development</div><h2>Player progress</h2><div class="sub">Skills signed off by coaches, level moves, and who needs attention.</div></div>
       <button class="btn btn-primary btn-sm" id="frameworkBtn">View skill framework</button>
     </div>
 
@@ -28,22 +28,22 @@
       <button class="glass glass-hover kpi reveal d3" data-signal="attention"><span class="stat-copy">Needs attention</span><span class="stat-value" id="kpiStalled">—</span><span class="delta down">Plateau, pause or managed load</span></button>
     </section>
 
-    <section class="glass glass-card reveal coach-accountability"><div class="card-head"><div><div class="kicker">Staff monitoring</div><h2>Coach development coverage</h2></div><span class="pill gold">Assessment accountability</span></div><div class="coach-monitor" id="coachMonitor"></div></section>
+    <section class="glass glass-card reveal coach-accountability"><div class="card-head"><div><div class="kicker">Coaches</div><h2>Coach follow-ups</h2></div><span class="pill gold">Reviews · last 30 days</span></div><div class="coach-monitor" id="coachMonitor"></div></section>
 
     <section class="progress-overview">
       <article class="glass glass-card reveal">
-        <div class="card-head"><div><div class="kicker">Academy pathway</div><h2>Level distribution</h2></div><span class="pill gold" id="avgMove">—</span></div>
+        <div class="card-head"><div><div class="kicker">Academy pathway</div><h2>Players per level</h2></div><span class="pill gold" id="avgMove">—</span></div>
         <div class="level-distribution" id="levelDistribution"></div>
       </article>
       <article class="glass glass-card reveal d1">
-        <div class="card-head"><div><div class="kicker">Talent radar</div><h2>Coach actions</h2></div><span class="pill green">Live</span></div>
+        <div class="card-head"><div><div class="kicker">Today</div><h2>Coach actions</h2></div><span class="pill green">Live</span></div>
         <div class="talent-list" id="talentList"></div>
       </article>
     </section>
 
     <section class="glass glass-card roster-card reveal">
-      <div class="card-head roster-head"><div><div class="kicker">All players</div><h2>Development roster</h2></div><div class="progress-filters"><input type="search" id="progressSearch" placeholder="Search player…" /><span class="lt-filter"><select id="levelFilter" aria-label="Filter by level"><option value="all">All levels</option></select></span><span class="lt-filter"><select id="signalFilter" aria-label="Filter by signal"><option value="all">All signals</option><option value="fast">Fast learners</option><option value="ready">Ready for review</option><option value="attention">All needing attention</option><option value="stalled">Plateau / overdue</option><option value="managed">Managed / paused</option><option value="on-track">On track</option></select></span></div></div>
-      <div class="table-wrap progress-table-wrap"><table class="lt-table tight progress-table"><thead><tr><th>Player</th><th>Current level</th><th>Skills</th><th>At level</th><th>Learning speed</th><th>Coach signal</th></tr></thead><tbody id="progressRows"></tbody></table></div>
+      <div class="card-head roster-head"><div><div class="kicker">Roster</div><h2>All players</h2></div><div class="progress-filters"><input type="search" id="progressSearch" placeholder="Search player…" /><span class="lt-filter"><select id="levelFilter" aria-label="Filter by level"><option value="all">All levels</option></select></span><span class="lt-filter"><select id="signalFilter" aria-label="Filter by signal"><option value="all">All signals</option><option value="fast">Fast learners</option><option value="ready">Ready for review</option><option value="attention">All needing attention</option><option value="stalled">Plateau / overdue</option><option value="managed">Managed / paused</option><option value="on-track">On track</option></select></span></div></div>
+      <div class="table-wrap progress-table-wrap"><table class="lt-table tight progress-table"><thead><tr><th>Player</th><th>Current level</th><th>Skills</th><th>Time at level</th><th>Pace</th><th>Coach signal</th></tr></thead><tbody id="progressRows"></tbody></table></div>
       <div class="empty-state hide" id="progressEmpty">No players match these filters.</div>
     </section>
   </main>
@@ -74,6 +74,6 @@
   <script src="assets/js/data.js?v=6"></script>
   <script src="assets/js/cloud.js?v=7"></script>
   <script src="assets/js/progress-data.js?v=3"></script>
-  <script src="assets/js/progress.js?v=4"></script>
+  <script src="assets/js/progress.js?v=5"></script>
 </body>
 </html>

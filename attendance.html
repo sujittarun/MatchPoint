@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/glass.css?v=18" />
+  <link rel="stylesheet" href="assets/css/glass.css?v=19" />
   <script>document.documentElement.dataset.theme = localStorage.getItem("mp-theme") || "dark"; document.documentElement.classList.add("lt-js");</script>
   <style>
     .att-mode { display: flex; gap: 8px; }
@@ -47,6 +47,7 @@
           <button class="chip active" data-mode="members">Members</button>
           <button class="chip" data-mode="staff">Staff &amp; coaches</button>
         </div>
+        <input type="search" id="attSearch" placeholder="Search name…" aria-label="Search by name" style="width: min(240px, 100%);" />
         <span class="lt-filter" id="programFilterWrap"><select id="programSelect" aria-label="Filter by program"></select></span>
       </div>
     </div>
@@ -84,6 +85,13 @@
       dateInput.value = LT.today();
       var mode = "members";  // members | staff
       var program = "all";
+      var query = "";        // live name search, both modes
+
+      document.getElementById("attSearch").addEventListener("input", function () {
+        query = this.value.trim().toLowerCase();
+        render();
+      });
+      function nameMatch(p) { return !query || p.name.toLowerCase().indexOf(query) !== -1; }
 
       /* program filter (members mode only) */
       var chips = [{ id: "all", name: "All programs" }].concat(LT_DATA.programs);
@@ -132,20 +140,22 @@
         if (mode === "staff") {
           // explicit getter: staff scope by .venue only (null = both venues);
           // never fall back to .sport
-          list = LT.venue.filter(LT_STAFF(), function (s) { return s.venue; });
-          total = list.length;
-          scopedRows = list;
+          var staffRows = LT.venue.filter(LT_STAFF(), function (s) { return s.venue; });
+          list = staffRows.filter(nameMatch);
+          total = staffRows.length;
+          scopedRows = staffRows;
           document.getElementById("grid").innerHTML = list.map(function (p) {
             var on = marks.indexOf(p.id) !== -1;
             return '<div class="att-tile' + (on ? " present" : "") + '" data-id="' + p.id + '">' +
               '<button type="button" class="att-del" data-del="' + p.id + '" aria-label="Remove ' + LT.esc(p.name) + '">✕</button>' +
-              '<span class="av">' + (on ? "✓" : LT.initials(p.name)) + "</span>" +
-              '<span><span class="nm">' + LT.esc(p.name) + '</span><br /><span class="bt">' + LT.esc(p.role) + "</span></span></div>";
+              '<span class="av">' + LT.initials(p.name) + "</span>" +
+              '<span><span class="nm">' + LT.esc(p.name) + '</span><br /><span class="bt">' + LT.esc(p.role) + "</span></span>" +
+              '<span class="att-tick" aria-hidden="true">✓</span></div>';
           }).join("");
         } else {
           // roster scoped to the selected venue before the program filter
           var roster = LT.venue.filter(LT_ROSTER(), function (m) { return m.venue; });
-          list = roster.filter(function (m) { return program === "all" || m.program === program; });
+          list = roster.filter(function (m) { return (program === "all" || m.program === program) && nameMatch(m); });
           total = roster.length;
           scopedRows = roster;
           document.getElementById("grid").innerHTML = list.map(function (m) {
@@ -154,9 +164,14 @@
             var v = LT_DATA.sports[m.venue]; // venue short name after the program
             var sub = (p ? LT.esc(p.name) : "—") + (v ? " · " + v.short : "");
             return '<div class="att-tile' + (on ? " present" : "") + '" data-id="' + m.id + '">' +
-              '<span class="av">' + (on ? "✓" : LT.initials(m.name)) + "</span>" +
-              '<span><span class="nm">' + LT.esc(m.name) + '</span><br /><span class="bt">' + sub + "</span></span></div>";
+              '<span class="av">' + LT.initials(m.name) + "</span>" +
+              '<span><span class="nm">' + LT.esc(m.name) + '</span><br /><span class="bt">' + sub + "</span></span>" +
+              '<span class="att-tick" aria-hidden="true">✓</span></div>';
           }).join("");
+        }
+        if (!list.length) {
+          document.getElementById("grid").innerHTML =
+            '<div class="empty-state">' + (query ? "No one called “" + LT.esc(query) + "” here — try a shorter name." : "Nobody to show for this filter.") + "</div>";
         }
         // count only marks belonging to people in the current venue scope,
         // so the pill always matches the visible grid

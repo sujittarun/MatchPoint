@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/glass.css?v=18" />
+  <link rel="stylesheet" href="assets/css/glass.css?v=19" />
   <script>document.documentElement.dataset.theme = localStorage.getItem("mp-theme") || "dark"; document.documentElement.classList.add("lt-js");</script>
   <style>
     /* 2x2 KPIs on phones — less scrolling to reach the charts */
@@ -72,7 +72,7 @@
     </div>
 
     <section class="glass glass-card dev-pulse reveal">
-      <div><div class="card-head"><div><div class="kicker">Player development</div><h2>Pathway pulse</h2></div><a class="btn btn-primary btn-sm" href="progress.html">Open progress</a></div><div class="sub">Skill sign-offs, level movement and today’s training presence.</div><div class="dev-metrics"><div class="dev-metric good"><span>Fast learners</span><strong id="devFast">—</strong><small>≥35% above pace</small></div><div class="dev-metric good"><span>Promotion review</span><strong id="devReady">—</strong><small>required skills complete</small></div><div class="dev-metric warn"><span>Needs attention</span><strong id="devStalled">—</strong><small>plateau, pause or managed load</small></div><div class="dev-metric"><span>Attendance today</span><strong id="devAttendance">—</strong><small id="devAttendanceSub">not marked yet</small></div></div></div>
+      <div><div class="card-head"><div><div class="kicker">Player development</div><h2>Player progress today</h2></div><a class="btn btn-primary btn-sm" href="progress.html">Open progress</a></div><div class="sub">Skills signed off, level moves and today’s attendance.</div><div class="dev-metrics"><div class="dev-metric good"><span>Fast learners</span><strong id="devFast">—</strong><small>learning ahead of pace</small></div><div class="dev-metric good"><span>Ready to move up</span><strong id="devReady">—</strong><small>all skills signed off</small></div><div class="dev-metric warn"><span>Needs attention</span><strong id="devStalled">—</strong><small>stuck, paused or on lighter load</small></div><a class="dev-metric" href="attendance.html" style="text-decoration:none;"><span>Attendance today</span><strong id="devAttendance">—</strong><small id="devAttendanceSub">not marked yet</small></a></div></div>
       <div class="dev-watch"><div class="card-head"><div><div class="kicker">Coach watchlist</div><h2 style="font-size:16px">Next actions</h2></div></div><div id="devWatch"></div></div>
     </section>
 
@@ -152,7 +152,7 @@
       document.getElementById("devStalled").textContent = dev.filter(function (x) { return x.signal === "stalled" || x.signal === "managed"; }).length;
       var attMarks = LT.store.read("att-" + LT.today(), []), attTotal = LT_ROSTER().length;
       document.getElementById("devAttendance").textContent = attMarks.length ? Math.round(attMarks.length / Math.max(attTotal, 1) * 100) + "%" : "—";
-      document.getElementById("devAttendanceSub").textContent = attMarks.length + "/" + attTotal + (attMarks.length ? " checked in" : " · not marked yet");
+      document.getElementById("devAttendanceSub").textContent = attMarks.length + "/" + attTotal + (attMarks.length ? " checked in" : " · tap to mark now");
       document.getElementById("devWatch").innerHTML = dev.filter(function (x) { return x.signal === "ready" || x.signal === "stalled" || x.signal === "managed"; }).slice(0, 4).map(function (x) {
         var managed = x.signal === "managed";
         return '<a class="dev-person" href="progress.html?player=' + encodeURIComponent(x.member.id) + '"><span class="av">' + LT.initials(x.member.name) + '</span><div><strong>' + LT.esc(x.member.name) + '</strong><small>' + x.level.name + ' · ' + (x.signal === "ready" ? "promotion review" : managed ? x.profile.trainingStatus.replace(/-/g, " ") : x.days + " days at level") + '</small></div><span class="pill ' + (x.signal === "ready" ? "green" : "red") + '">' + (x.signal === "ready" ? "Ready" : managed ? "Managed" : "Review") + '</span></a>';

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="assets/css/glass.css?v=18" />
+  <link rel="stylesheet" href="assets/css/glass.css?v=19" />
   <script>document.documentElement.dataset.theme = localStorage.getItem("mp-theme") || "dark"; document.documentElement.classList.add("lt-js");</script>
   <style>
     /* keep the three headline stats side by side on phones — less scrolling */
@@ -138,7 +138,7 @@
         <span class="stat-sub" id="kpiTotalSub"></span>
       </div>
       <div class="glass glass-hover stat-card reveal d1">
-        <span class="stat-copy">Court revenue share</span>
+        <span class="stat-copy">From court bookings</span>
         <span class="stat-value" id="kpiCourt">—</span>
         <span class="stat-sub" id="kpiCourtSub"></span>
       </div>
@@ -470,10 +470,10 @@
         // net margin of the last CLOSED month (scoped series)
         var sf = LT_DATA.financeFor(SCOPE);
         var f = sf[sf.length - 2];
-        document.getElementById("kpiNetLabel").textContent = "Net margin · " + f.m;
+        document.getElementById("kpiNetLabel").textContent = "Profit margin · " + f.m;
         LT.countUp(document.getElementById("kpiNet"), Math.round(((f.rev - f.exp) / f.rev) * 100), { suffix: "%" });
         document.getElementById("kpiTotalSub").innerHTML = "across <b>" + all.length + "</b> payments";
-        document.getElementById("kpiCourtSub").innerHTML = "<b>" + (total ? Math.round(court / total * 100) : 0) + "%</b> of intake";
+        document.getElementById("kpiCourtSub").innerHTML = "<b>" + (total ? Math.round(court / total * 100) : 0) + "%</b> of all collections";
         document.getElementById("kpiNetSub").innerHTML = "<b>₹" + (f.rev - f.exp) + "k</b> profit";
       }
 

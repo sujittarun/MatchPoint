@@ -25,11 +25,12 @@
   --red-400: #ff6b6b;
   --sky-300: #7dd3fc;
 
-  /* Ink */
+  /* Ink — kept high enough that secondary labels stay readable on the
+     dark field (staff read these outdoors and on cheap panels) */
   --ink-hi: rgba(255, 255, 255, 0.96);
-  --ink-mid: rgba(230, 230, 244, 0.72);
-  --ink-low: rgba(230, 230, 244, 0.48);
-  --ink-faint: rgba(230, 230, 244, 0.28);
+  --ink-mid: rgba(232, 232, 246, 0.8);
+  --ink-low: rgba(230, 230, 244, 0.6);
+  --ink-faint: rgba(230, 230, 244, 0.42);
 
   /* Accent text (readable per theme) */
   --tx-gold: var(--gold-400);
@@ -70,7 +71,7 @@
   --dot-border: rgba(255, 255, 255, 0.3);
   --ghost-hover: rgba(255, 255, 255, 0.07);
   --option-bg: var(--forest-800);
-  --backdrop: rgba(5, 4, 12, 0.6);
+  --backdrop: rgba(5, 4, 12, 0.72);
   --toast-bg: linear-gradient(135deg, rgba(26, 24, 48, 0.92), rgba(10, 9, 20, 0.92));
   --toast-border: rgba(255, 255, 255, 0.18);
   --scroll-thumb: rgba(255, 255, 255, 0.14);
@@ -110,9 +111,9 @@
 /* ---------- Design tokens — LIGHT override ("clear glass") ---------- */
 :root[data-theme="light"] {
   --ink-hi: #17181c;
-  --ink-mid: rgba(25, 28, 38, 0.74);
-  --ink-low: rgba(25, 28, 38, 0.52);
-  --ink-faint: rgba(25, 28, 38, 0.34);
+  --ink-mid: rgba(25, 28, 38, 0.8);
+  --ink-low: rgba(25, 28, 38, 0.62);
+  --ink-faint: rgba(25, 28, 38, 0.46);
 
   --tx-gold: #4d7400;
   --tx-green: #0f766e;
@@ -501,26 +502,29 @@ button { font-family: inherit; }
   display: none;
   align-items: stretch;
   gap: 2px;
-  padding: 7px;
+  padding: 6px;
   border-radius: var(--r-pill);
-  width: min(440px, calc(100% - 20px));
+  width: min(460px, calc(100% - 12px));
 }
 .lt-dock.glass::after { display: none; }
 .dock-tab {
   position: relative;
   flex: 1;
+  min-width: 0; /* six tabs must fit a 375px phone without clipping */
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 3px;
-  padding: 7px 4px 6px;
+  padding: 9px 2px 8px;
   border: none;
   border-radius: 18px;
   background: transparent;
   color: var(--ink-low);
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
   cursor: pointer;
   transition: color 0.25s ease, background 0.25s ease;
   text-decoration: none;
@@ -535,6 +539,7 @@ button { font-family: inherit; }
   align-items: center;
   justify-content: center;
   gap: 8px;
+  min-height: 44px; /* Apple HIG touch target — staff tap these courtside */
   padding: 11px 22px;
   border-radius: var(--r-pill);
   border: 1px solid transparent;
@@ -585,10 +590,10 @@ button { font-family: inherit; }
 .btn-ghost:hover { color: var(--ink-hi); background: var(--ghost-hover); }
 
 
-.btn-sm { padding: 7px 14px; font-size: 12.5px; }
+.btn-sm { padding: 7px 16px; font-size: 13px; min-height: 40px; }
 .btn-lg { padding: 14px 30px; font-size: 15.5px; }
 .btn-block { width: 100%; }
-.btn-icon { width: 38px; height: 38px; padding: 0; border-radius: 50%; }
+.btn-icon { width: 44px; height: 44px; min-height: 44px; padding: 0; border-radius: 50%; }
 
 /* ---------- Forms ---------- */
 .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
@@ -618,6 +623,14 @@ input[type="number"], input[type="date"], input[type="search"], select, textarea
   appearance: none;
 }
 textarea { resize: vertical; min-height: 64px; }
+/* iOS Safari auto-zooms any focused input under 16px — that zoom disorients
+   non-technical staff mid-form, so phones get full-size input text */
+@media (max-width: 700px) {
+  input[type="text"], input[type="email"], input[type="password"], input[type="tel"],
+  input[type="number"], input[type="date"], input[type="search"], select, textarea {
+    font-size: 16px;
+  }
+}
 input::placeholder, textarea::placeholder { color: var(--ink-faint); }
 input:hover, select:hover, textarea:hover { border-color: var(--input-border-hover); }
 input:focus, select:focus, textarea:focus {
@@ -809,11 +822,18 @@ table.lt-table { width: 100%; border-collapse: separate; border-spacing: 0; font
 /* freeze the page behind an open modal so touch-scroll moves the modal, not
    the page underneath it */
 body.lt-noscroll { overflow: hidden; }
-/* Modals sit over busy photo content — give them a much more solid fill
-   than ambient glass so rows and bars stay legible in BOTH themes. */
-.lt-modal.glass { background: rgba(16, 15, 32, 0.82); }
-:root[data-theme="light"] .lt-modal.glass { background: rgba(255, 255, 255, 0.82); }
-:root[data-theme="light"] .lt-modal-backdrop { background: rgba(18, 22, 34, 0.45); }
+/* Modals are near-opaque on purpose: page content bleeding through the
+   glass reads as double-exposed text and confuses non-technical staff.
+   The glass identity stays on ambient cards; forms get a solid surface. */
+.lt-modal.glass {
+  background: rgba(18, 17, 34, 0.97);
+  /* the fill is near-opaque, so the inherited glass blur adds nothing but
+     compositing cost (and Safari artifacts) — turn it off on modals */
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+:root[data-theme="light"] .lt-modal.glass { background: rgba(255, 255, 255, 0.97); }
+:root[data-theme="light"] .lt-modal-backdrop { background: rgba(18, 22, 34, 0.5); }
 .lt-modal {
   width: min(620px, 100%);
   max-height: min(86vh, 86dvh);
@@ -861,6 +881,9 @@ body.lt-noscroll { overflow: hidden; }
 /* ---------- Chips ---------- */
 .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip {
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
   padding: 7px 16px;
   border-radius: var(--r-pill);
   border: 1px solid var(--chip-border);
@@ -1026,12 +1049,21 @@ html.lt-js .lt-page { animation: lt-page-in 0.55s var(--ease-spring) both; }
 .att-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
 .att-tile {
   display: flex; align-items: center; gap: 10px;
+  min-height: 56px; /* comfortable one-thumb target */
   padding: 9px 12px; border-radius: var(--r-md); min-width: 0;
   border: 1px solid var(--tile-border); background: var(--tile-bg);
   cursor: pointer; user-select: none;
   transition: border-color 0.25s ease, background 0.25s ease, transform 0.3s var(--ease-spring);
 }
 .att-tile:active { transform: scale(0.97); }
+/* explicit check ring so "tap to mark" is self-evident before the first tap */
+.att-tile .att-tick {
+  margin-left: auto; flex: none; width: 26px; height: 26px; border-radius: 50%;
+  border: 2px solid var(--ink-faint); display: grid; place-items: center;
+  font-size: 14px; font-weight: 800; color: transparent;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+.att-tile.present .att-tick { border-color: transparent; background: linear-gradient(135deg, #6ee7b7, #34d399); color: #06382a; }
 .att-tile .av { width: 32px; height: 32px; flex: none; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; color: #221204; background: var(--gold-grad); }
 .att-tile .nm { font-size: 13px; font-weight: 650; color: var(--ink-hi); line-height: 1.2; }
 .att-tile .bt { font-size: 10.5px; color: var(--ink-low); }
