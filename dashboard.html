@@ -137,7 +137,8 @@
       document.getElementById("kpiRevSub").textContent = "Month to date · " + rev[rev.length - 2].m + " closed at ₹" + rev[rev.length - 2].v + "k";
 
       // members KPIs (scoped to the selected venue)
-      var members = LT.venue.filter(LT_DATA.members, function (m) { return m.venue; });
+      // LT_ROSTER (not raw seed) so app-added members and renewal overrides count
+      var members = LT.venue.filter(LT_ROSTER(), function (m) { return m.venue; });
       var due = members.filter(function (m) { return m.status === "due"; });
       LT.countUp(document.getElementById("kpiMembers"), members.length);
       document.getElementById("kpiMembersSub").textContent = "▲ " +

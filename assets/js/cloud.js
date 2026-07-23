@@ -123,16 +123,27 @@
     });
   }
   function resilientRpc(name,args){return resilient("POST","/rpc/"+name,args);}
+  var flushing = false;
   function flushOutbox() {
+    // reentrancy guard: the online event and the boot timer can overlap and
+    // would replay every queued op twice; claim the queue up front so a
+    // second flush (or another tab racing us) starts from empty
+    if (flushing) return Promise.resolve();
     var q = outbox();
     if (!q.length) return Promise.resolve();
+    flushing = true;
+    saveOutbox([]);
     var remaining = [], chain = Promise.resolve();
     q.forEach(function (op) {
       chain = chain.then(function () {
         return req(op.method, op.path, op.body, op.extra).catch(function (err) { if (isNetworkErr(err)) remaining.push(op); });
       });
     });
-    return chain.then(function () { saveOutbox(remaining); });
+    return chain.then(function () {
+      // re-queue only network failures, after anything queued mid-flush
+      if (remaining.length) saveOutbox(outbox().concat(remaining));
+      flushing = false;
+    });
   }
   if (typeof window !== "undefined") {
     window.addEventListener("online", flushOutbox);

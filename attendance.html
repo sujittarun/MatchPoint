@@ -75,7 +75,7 @@
 
   <script src="assets/js/core.js?v=8"></script>
   <script src="assets/js/data.js?v=5"></script>
-  <script src="assets/js/cloud.js?v=7"></script>
+  <script src="assets/js/cloud.js?v=8"></script>
   <script>
     LT.auth.require();
     LT.managerShell("attendance.html");
@@ -117,7 +117,8 @@
       });
 
       function key() { return (mode === "staff" ? "att-staff-" : "att-") + dateInput.value; }
-      function present() { return LT.store.read(key(), []); }
+      // normalize to strings so seed (numeric) and app-added ("M<ts>") ids compare
+      function present() { return (LT.store.read(key(), []) || []).map(String); }
 
       // cloud is authoritative when reachable: pull the day's marks (both
       // modes) into the local store so every staff phone sees the same ticks
@@ -127,7 +128,9 @@
         LT_CLOUD.fetchAttendance(d).then(function (rows) {
           if (!rows) return;
           var mem = [], st = [];
-          rows.forEach(function (r) { (r.kind === "staff" ? st : mem).push(r.kind === "staff" ? r.person_id : +r.person_id); });
+          // ids stay strings: locally-added members carry "M<timestamp>" ids
+          // that Number() would turn into NaN (un-markable forever)
+          rows.forEach(function (r) { (r.kind === "staff" ? st : mem).push(String(r.person_id)); });
           LT.store.write("att-" + d, mem);
           LT.store.write("att-staff-" + d, st);
           render();
@@ -145,7 +148,7 @@
           total = staffRows.length;
           scopedRows = staffRows;
           document.getElementById("grid").innerHTML = list.map(function (p) {
-            var on = marks.indexOf(p.id) !== -1;
+            var on = marks.indexOf(String(p.id)) !== -1;
             return '<div class="att-tile' + (on ? " present" : "") + '" data-id="' + p.id + '">' +
               '<button type="button" class="att-del" data-del="' + p.id + '" aria-label="Remove ' + LT.esc(p.name) + '">✕</button>' +
               '<span class="av">' + LT.initials(p.name) + "</span>" +
@@ -159,7 +162,7 @@
           total = roster.length;
           scopedRows = roster;
           document.getElementById("grid").innerHTML = list.map(function (m) {
-            var on = marks.indexOf(m.id) !== -1;
+            var on = marks.indexOf(String(m.id)) !== -1;
             var p = LT_DATA.programs.find(function (x) { return x.id === m.program; });
             var v = LT_DATA.sports[m.venue]; // venue short name after the program
             var sub = (p ? LT.esc(p.name) : "—") + (v ? " · " + v.short : "");
@@ -188,7 +191,7 @@
         if (del) { e.stopPropagation(); removeCoach(del.dataset.del); return; }
         var tile = e.target.closest(".att-tile");
         if (!tile) return;
-        var id = mode === "staff" ? tile.dataset.id : +tile.dataset.id;
+        var id = String(tile.dataset.id);
         var marks = present();
         var i = marks.indexOf(id);
         if (i === -1) marks.push(id); else marks.splice(i, 1);

@@ -251,7 +251,7 @@
 
   <script src="assets/js/core.js?v=8"></script>
   <script src="assets/js/data.js?v=5"></script>
-  <script src="assets/js/cloud.js?v=7"></script>
+  <script src="assets/js/cloud.js?v=8"></script>
   <script>
     LT.auth.require();
     LT.managerShell("fees.html");
@@ -461,7 +461,9 @@
       function fmtD(iso) { return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short" }); }
 
       function paintKPIs() {
-        var all = allPayments();
+        // the KPI says "last 30 days" — hold it to that
+        var cutoff = LT.isoDate(new Date(Date.now() - 30 * 864e5));
+        var all = allPayments().filter(function (p) { return p.on >= cutoff; });
         var total = all.reduce(function (s, p) { return s + p.amount; }, 0);
         var court = all.filter(function (p) { return p.type === "Court"; })
           .reduce(function (s, p) { return s + p.amount; }, 0);

@@ -41,7 +41,7 @@
     var date = new Date(iso); if (isNaN(date.getTime())) return "not recorded";
     return date.toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"});
   }
-  function futureDate(days) { var d=new Date(LT.today()+"T00:00:00");d.setDate(d.getDate()+days);return d.toISOString().slice(0,10); }
+  function futureDate(days) { var d=new Date(LT.today()+"T00:00:00");d.setDate(d.getDate()+days);return LT.isoDate(d); }
   function levelById(id) { return LTP.levels[Number(id)-1]; }
   function liveStaff() { return !!(window.LT_CLOUD && LT_CLOUD.hasStaffSession && LT_CLOUD.hasStaffSession()); }
   function writeFailed(label,err){LT.toast(label+" not saved: "+(err&&err.message?err.message:err));}
@@ -262,8 +262,18 @@
   function syncCloudRoster(cloudMembers) {
     if(!cloudMembers||!cloudMembers.length)return;
     var local=LT.store.read("members",[])||[],by={};local.forEach(function(m){by[String(m.id)]=m;});
+    var phoneOf=function(p){return String(p||"").replace(/\D/g,"").slice(-10);};
     cloudMembers.forEach(function(row){
       var member={id:row.id,name:row.name,phone:row.phone||"",program:String(row.program||"").split(" · ")[0],venue:row.venue||String(row.program||"").split(" · ")[1]||"manikonda",joined:row.joined,validTill:row.valid_till,status:row.status||"active",isDemo:!!row.is_demo};
+      // a member added on this device gets a provisional "M<ts>" id until the
+      // cloud mints the real one — when the cloud row comes back, adopt it in
+      // place of the provisional twin (matched by phone) instead of duplicating
+      Object.keys(by).forEach(function(id){
+        if(/^M\d+$/.test(id)&&phoneOf(by[id].phone)===phoneOf(member.phone)&&phoneOf(member.phone)){
+          if(!member.program&&by[id].program)member.program=by[id].program;
+          delete by[id];
+        }
+      });
       by[String(member.id)]=Object.assign({},by[String(member.id)]||{},member);
     });
     LT.store.write("members",Object.keys(by).map(function(id){return by[id];}));
