@@ -24,6 +24,15 @@
   function levelById(id) { return LTP.levels[Number(id)-1]; }
   function liveStaff() { return !!(window.LT_CLOUD && LT_CLOUD.hasStaffSession && LT_CLOUD.hasStaffSession()); }
   function writeFailed(label,err){LT.toast(label+" not saved: "+(err&&err.message?err.message:err));}
+  // Demo-only players exist in the local seed but not in the cloud roster, so
+  // cloud writes for them are rejected ("player progress not initialized").
+  // Fall back to an on-device save for those; every other rejection (network,
+  // promotion gates, invalid state) still fails loudly.
+  function demoFallback(label,err,apply,onFail){
+    var msg=String(err&&err.message?err.message:err);
+    if(/not initialized|does not belong to tenant|not active in the player/i.test(msg)){apply();LT.toast("✓ Saved on this device — demo player");}
+    else{if(onFail)onFail();writeFailed(label,err);}
+  }
   function stateOf(profile, id) {
     if ((profile.completed||[]).indexOf(id)!==-1) return "mastered";
     if ((profile.learning||[]).indexOf(id)!==-1) return "learning";
@@ -162,7 +171,7 @@
     if(!currentMemberId)return;
     var memberId=currentMemberId,p=LTP.profile(memberId),state=stateOf(p,skillId),next=state==="not-started"?"learning":state==="learning"?"mastered":"not-started";
     function apply(){LTP.setSkill(memberId,skillId,next);render();openPlayer(memberId);LT.toast(next==="mastered"?"Skill signed off ✓":"Skill marked "+next.replace("-"," "));}
-    if(liveStaff()&&LT_CLOUD.saveSkillAssessment)LT_CLOUD.saveSkillAssessment(memberId,skillId,next,p.coach).then(apply).catch(function(err){writeFailed("Assessment",err);});else apply();
+    if(liveStaff()&&LT_CLOUD.saveSkillAssessment)LT_CLOUD.saveSkillAssessment(memberId,skillId,next,p.coach).then(apply).catch(function(err){demoFallback("Assessment",err,apply);});else apply();
   }
 
   function closePlayer(){document.getElementById("progressBackdrop").classList.remove("open");currentMemberId=null;}
@@ -176,51 +185,51 @@
   document.getElementById("trainingStatusSelect").addEventListener("change",function(){
     if(!currentMemberId)return;var memberId=currentMemberId,status=this.value;
     function apply(){LTP.setTrainingStatus(memberId,status);render();openPlayer(memberId);LT.toast("Training status: "+statusLabel[status]+" ✓");}
-    if(liveStaff()&&LT_CLOUD.setTrainingStatus)LT_CLOUD.setTrainingStatus(memberId,status).then(apply).catch(function(err){openPlayer(memberId);writeFailed("Training status",err);});else apply();
+    if(liveStaff()&&LT_CLOUD.setTrainingStatus)LT_CLOUD.setTrainingStatus(memberId,status).then(apply).catch(function(err){demoFallback("Training status",err,apply,function(){openPlayer(memberId);});});else apply();
   });
   document.getElementById("noteForm").addEventListener("submit",function(e){
     e.preventDefault();var input=document.getElementById("noteText"),note=input.value.trim();if(!note||!currentMemberId)return;
     var memberId=currentMemberId,p=LTP.profile(memberId);
     function apply(){LTP.addNote(memberId,note);input.value="";render();openPlayer(memberId);LT.toast("Assessment note saved ✓");}
-    if(liveStaff()&&LT_CLOUD.addProgressNote)LT_CLOUD.addProgressNote(memberId,note,p.coach).then(apply).catch(function(err){writeFailed("Assessment note",err);});else apply();
+    if(liveStaff()&&LT_CLOUD.addProgressNote)LT_CLOUD.addProgressNote(memberId,note,p.coach).then(apply).catch(function(err){demoFallback("Assessment note",err,apply);});else apply();
   });
   document.getElementById("goalForm").addEventListener("submit",function(e){
     e.preventDefault();var input=document.getElementById("goalText"),date=document.getElementById("goalDate"),text=input.value.trim();if(!text||!currentMemberId)return;
     var memberId=currentMemberId,p=LTP.profile(memberId);
     function add(id){LTP.addGoal(memberId,text,date.value||null,id);input.value="";date.value="";render();openPlayer(memberId);LT.toast("Development goal added ✓");}
-    if(liveStaff()&&LT_CLOUD.addPlayerGoal){LT_CLOUD.addPlayerGoal(memberId,text,date.value||null,p.coach).then(function(result){add(result&&result[0]&&result[0].id);}).catch(function(err){writeFailed("Development goal",err);});}else add();
+    if(liveStaff()&&LT_CLOUD.addPlayerGoal){LT_CLOUD.addPlayerGoal(memberId,text,date.value||null,p.coach).then(function(result){add(result&&result[0]&&result[0].id);}).catch(function(err){demoFallback("Development goal",err,function(){add();});});}else add();
   });
   document.getElementById("playerGoals").addEventListener("click",function(e){
     var button=e.target.closest("[data-goal]");if(!button||!currentMemberId)return;
     var memberId=currentMemberId,id=button.dataset.goal,current=(LTP.profile(memberId).goals||[]).find(function(g){return String(g.id)===String(id);}),desired=current&&current.status==="achieved"?"active":"achieved";
     function apply(){var p=LTP.toggleGoal(memberId,id),goal=(p.goals||[]).find(function(g){return String(g.id)===String(id);});render();openPlayer(memberId);LT.toast(goal&&goal.status==="achieved"?"Goal achieved ✓":"Goal reopened");}
-    if(liveStaff()&&current&&/^\d+$/.test(String(id)))LT_CLOUD.updatePlayerGoal(id,desired).then(apply).catch(function(err){writeFailed("Goal update",err);});else apply();
+    if(liveStaff()&&current&&/^\d+$/.test(String(id)))LT_CLOUD.updatePlayerGoal(id,desired).then(apply).catch(function(err){demoFallback("Goal update",err,apply);});else apply();
   });
   document.getElementById("constraintForm").addEventListener("submit",function(e){
     e.preventDefault();var memberId=currentMemberId,category=document.getElementById("constraintCategory").value,input=document.getElementById("constraintText"),review=document.getElementById("constraintReview"),summary=input.value.trim();if(!memberId||!summary)return;
     var coach=LTP.profile(memberId).coach;
     function add(result){var row=Array.isArray(result)?result[0]:result;LTP.addConstraint(memberId,category,summary,review.value||null,row&&row.id);input.value="";review.value="";render();openPlayer(memberId);LT.toast("Load guidance added ✓");}
-    if(liveStaff()&&LT_CLOUD.addTrainingConstraint)LT_CLOUD.addTrainingConstraint(memberId,category,summary,review.value||null,coach).then(add).catch(function(err){writeFailed("Load guidance",err);});else add();
+    if(liveStaff()&&LT_CLOUD.addTrainingConstraint)LT_CLOUD.addTrainingConstraint(memberId,category,summary,review.value||null,coach).then(add).catch(function(err){demoFallback("Load guidance",err,function(){add();});});else add();
   });
   document.getElementById("playerConstraints").addEventListener("click",function(e){
     var button=e.target.closest("[data-close-constraint]");if(!button||!currentMemberId)return;var id=button.dataset.closeConstraint,memberId=currentMemberId;
     function apply(){LTP.closeConstraint(memberId,id);render();openPlayer(memberId);LT.toast("Constraint closed ✓");}
-    if(liveStaff()&&/^\d+$/.test(String(id)))LT_CLOUD.closeTrainingConstraint(id).then(apply).catch(function(err){writeFailed("Constraint",err);});else apply();
+    if(liveStaff()&&/^\d+$/.test(String(id)))LT_CLOUD.closeTrainingConstraint(id).then(apply).catch(function(err){demoFallback("Constraint",err,apply);});else apply();
   });
   document.getElementById("observationForm").addEventListener("submit",function(e){
     e.preventDefault();var memberId=currentMemberId,focus=document.getElementById("observationFocus"),effort=document.getElementById("observationEffort").value,movement=document.getElementById("observationMovement").value,note=document.getElementById("observationNote"),text=focus.value.trim();if(!memberId||!text)return;var coach=LTP.profile(memberId).coach;
     function add(result){var row=Array.isArray(result)?result[0]:result;LTP.addObservation(memberId,text,effort,movement,note.value.trim(),row&&row.id);focus.value="";note.value="";render();openPlayer(memberId);LT.toast("Session observation recorded ✓");}
-    if(liveStaff()&&LT_CLOUD.addTrainingObservation)LT_CLOUD.addTrainingObservation(memberId,text,effort,movement,note.value.trim(),coach).then(add).catch(function(err){writeFailed("Session observation",err);});else add();
+    if(liveStaff()&&LT_CLOUD.addTrainingObservation)LT_CLOUD.addTrainingObservation(memberId,text,effort,movement,note.value.trim(),coach).then(add).catch(function(err){demoFallback("Session observation",err,function(){add();});});else add();
   });
   document.getElementById("reviewForm").addEventListener("submit",function(e){
     e.preventDefault();var memberId=currentMemberId,outcome=document.getElementById("reviewOutcome").value,next=document.getElementById("nextReviewDate").value,note=document.getElementById("reviewNote"),text=note.value.trim();if(!memberId||!next)return;var coach=LTP.profile(memberId).coach;
     function add(result){var row=Array.isArray(result)?result[0]:result;LTP.addReview(memberId,outcome,next,text,row&&row.id);note.value="";document.getElementById("nextReviewDate").value=futureDate(45);render();openPlayer(memberId);LT.toast("Development review completed ✓");}
-    if(liveStaff()&&LT_CLOUD.recordDevelopmentReview)LT_CLOUD.recordDevelopmentReview(memberId,outcome,next,text,coach).then(add).catch(function(err){LT.toast("Review not saved: "+(err.message||err));});else add();
+    if(liveStaff()&&LT_CLOUD.recordDevelopmentReview)LT_CLOUD.recordDevelopmentReview(memberId,outcome,next,text,coach).then(add).catch(function(err){demoFallback("Review",err,function(){add();});});else add();
   });
   document.getElementById("promoteBtn").addEventListener("click",function(){
     if(!currentMemberId)return;var memberId=currentMemberId,before=LTP.profile(memberId),nextLevel=before.level+1,button=this;
     function finish(){var next=LTP.promote(memberId,before.coach);if(!next)return;render();openPlayer(memberId);LT.toast("Player promoted to "+levelById(next.level).name+" ✓");}
-    if(liveStaff()&&LT_CLOUD.promotePlayer){button.disabled=true;button.textContent="Promoting…";LT_CLOUD.promotePlayer(memberId,nextLevel,LT.today(),before.coach).then(finish).catch(function(err){openPlayer(memberId);LT.toast("Promotion not saved: "+(err.message||err));});}else finish();
+    if(liveStaff()&&LT_CLOUD.promotePlayer){button.disabled=true;button.textContent="Promoting…";LT_CLOUD.promotePlayer(memberId,nextLevel,LT.today(),before.coach).then(finish).catch(function(err){demoFallback("Promotion",err,finish,function(){openPlayer(memberId);});});}else finish();
   });
 
   var framework=document.getElementById("frameworkBackdrop");
